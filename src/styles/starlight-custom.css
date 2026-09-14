@@ -1,0 +1,470 @@
+/* =========================================================
+   Starlight Custom Minimalist Monochrome Theme
+   ========================================================= */
+
+:root {
+  --sl-color-accent-low: #0f2c59;
+  --sl-color-accent: #2997FF;
+  --sl-color-accent-high: #66b3ff;
+  
+  --sl-color-bg: #0D0D0D;
+  --sl-color-bg-nav: rgba(13, 13, 13, 0.95);
+  --sl-color-bg-sidebar: #0D0D0D;
+  --sl-color-bg-inline-code: #141418;
+  
+  --sl-color-border: #26262B;
+  --sl-color-text: #F5F5F7;
+  --sl-color-text-muted: #8E8E93;
+
+  /* Asides custom colors (Dark mode) */
+  --sl-color-aside-note: #2997FF;
+  --sl-color-aside-note-bg: rgba(41, 151, 255, 0.06);
+  --sl-color-aside-note-border: #2997FF;
+
+  --sl-color-aside-tip: #2997FF;
+  --sl-color-aside-tip-bg: rgba(41, 151, 255, 0.06);
+  --sl-color-aside-tip-border: #2997FF;
+
+  --sl-color-aside-warning: #FF9F0A;
+  --sl-color-aside-warning-bg: rgba(255, 159, 10, 0.06);
+  --sl-color-aside-warning-border: #FF9F0A;
+
+  --sl-color-aside-danger: #FF453A;
+  --sl-color-aside-danger-bg: rgba(255, 69, 58, 0.06);
+  --sl-color-aside-danger-border: #FF453A;
+  
+  --sl-font-display: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sl-font-body: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #e6f4fe;
+  --sl-color-accent: #2997FF;
+  --sl-color-accent-high: #0066cc;
+  
+  --sl-color-bg: #FFFFFF;
+  --sl-color-bg-nav: rgba(255, 255, 255, 0.95);
+  --sl-color-bg-sidebar: #FFFFFF;
+  --sl-color-bg-inline-code: #F2F2F7;
+  
+  --sl-color-border: #E4E3DF;
+  --sl-color-text: #0D0D0D;
+  --sl-color-text-muted: #7A7A76;
+
+  /* Asides custom colors (Light mode) */
+  --sl-color-aside-note: #2997FF;
+  --sl-color-aside-note-bg: rgba(41, 151, 255, 0.05);
+  --sl-color-aside-note-border: #2997FF;
+
+  --sl-color-aside-tip: #2997FF;
+  --sl-color-aside-tip-bg: rgba(41, 151, 255, 0.05);
+  --sl-color-aside-tip-border: #2997FF;
+
+  --sl-color-aside-warning: #B4711F;
+  --sl-color-aside-warning-bg: rgba(180, 113, 31, 0.05);
+  --sl-color-aside-warning-border: #B4711F;
+
+  --sl-color-aside-danger: #B43434;
+  --sl-color-aside-danger-bg: rgba(180, 52, 52, 0.05);
+  --sl-color-aside-danger-border: #B43434;
+}
+
+/* Base Body Override */
+body {
+  background-image: none !important;
+  background-color: var(--sl-color-bg) !important;
+  color: var(--sl-color-text) !important;
+}
+
+/* Header and Navigation */
+.site-title img {
+  border-radius: 0 !important;
+  border: 1px solid var(--sl-color-border);
+  height: 32px !important;
+  width: auto !important;
+  object-fit: contain;
+}
+
+.site-title span {
+  display: none !important;
+}
+
+/* Headings with standard case & letter-spacing */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--sl-font-display) !important;
+  text-transform: none !important;
+  letter-spacing: -0.01em !important;
+  font-weight: 500 !important;
+  color: var(--sl-color-text) !important;
+}
+
+/* Custom styles for tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  background-color: #141418 !important;
+  color: #F5F5F7 !important;
+  font-weight: 500 !important;
+  border-bottom: 2px solid var(--sl-color-border) !important;
+  padding: 10px 14px !important;
+}
+
+:root[data-theme="light"] th {
+  background-color: #F5F5F7 !important;
+  color: #0D0D0D !important;
+  border-bottom: 2px solid #E4E3DF !important;
+}
+
+td {
+  border-bottom: 1px solid var(--sl-color-border) !important;
+  padding: 10px 14px !important;
+}
+
+/* Asides (Callouts - No purple, fully integrated monochrome & blue) */
+.starlight-aside, aside {
+  border-radius: 2px !important;
+  border-width: 1px !important;
+  font-size: 13.5px !important;
+  padding: 1rem 1.25rem !important;
+  margin: 1.5rem 0 !important;
+}
+
+.starlight-aside--note,
+.starlight-aside--tip,
+aside.note,
+aside.tip {
+  border-color: #2997FF !important;
+  background-color: rgba(41, 151, 255, 0.06) !important;
+}
+
+.starlight-aside--note .starlight-aside__title,
+.starlight-aside--tip .starlight-aside__title,
+aside.note .title,
+aside.tip .title {
+  color: #2997FF !important;
+  font-family: var(--sl-font-display) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.starlight-aside--caution,
+.starlight-aside--warning,
+aside.caution,
+aside.warning {
+  border-color: var(--sl-color-aside-warning-border) !important;
+  background-color: var(--sl-color-aside-warning-bg) !important;
+}
+
+.starlight-aside--caution .starlight-aside__title,
+.starlight-aside--warning .starlight-aside__title,
+aside.caution .title,
+aside.warning .title {
+  color: var(--sl-color-aside-warning) !important;
+  font-family: var(--sl-font-display) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.starlight-aside--danger,
+aside.danger {
+  border-color: var(--sl-color-aside-danger-border) !important;
+  background-color: var(--sl-color-aside-danger-bg) !important;
+}
+
+.starlight-aside--danger .starlight-aside__title,
+aside.danger .title {
+  color: var(--sl-color-aside-danger) !important;
+  font-family: var(--sl-font-display) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Center and style Mermaid diagrams with dynamic backgrounds */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #141418 !important;
+  padding: 1.5rem;
+  border-radius: 2px;
+  border: 1px solid var(--sl-color-border) !important;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+:root[data-theme="light"] .mermaid {
+  background-color: #FFFFFF !important;
+  border-color: #E4E3DF !important;
+}
+
+.mermaid svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* =========================================================
+   API REST Download Card and Interactive Playground
+   ========================================================= */
+.openapi-download-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--sl-color-bg-inline-code);
+  border: 1px solid var(--sl-color-border);
+  padding: 1.5rem;
+  margin: 2rem 0;
+  gap: 1.5rem;
+  border-radius: 2px;
+}
+
+.openapi-download-card__content strong {
+  display: block;
+  font-family: var(--sl-font-display);
+  font-size: 1.1rem;
+  color: var(--sl-color-text);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.openapi-download-card__content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--sl-color-text-muted);
+}
+
+.openapi-download-btn,
+.btn-send {
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--sl-color-text) !important;
+  color: var(--sl-color-bg) !important;
+  border: 1px solid var(--sl-color-text);
+  font-family: var(--sl-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none !important;
+  text-transform: none;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  white-space: nowrap;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.openapi-download-btn:hover,
+.btn-send:hover {
+  background: var(--sl-color-accent) !important;
+  border-color: var(--sl-color-accent) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 600px) {
+  .openapi-download-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.api-playground-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--sl-color-border);
+  background-color: var(--sl-color-bg);
+  margin: 2rem 0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .api-playground-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.api-playground-sidebar {
+  padding: 1.5rem;
+  border-right: 1px solid var(--sl-color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+@media (max-width: 900px) {
+  .api-playground-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--sl-color-border);
+  }
+}
+
+.api-playground-sidebar h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--sl-color-text);
+  border-bottom: 1px solid var(--sl-color-border);
+  padding-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.playground-intro {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--sl-color-text-muted);
+}
+
+.endpoint-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.endpoint-selector label {
+  font-family: var(--sl-font-display);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--sl-color-text);
+}
+
+.custom-select {
+  background-color: var(--sl-color-bg-inline-code);
+  color: var(--sl-color-text);
+  border: 1px solid var(--sl-color-border);
+  padding: 0.6rem;
+  font-family: var(--sl-font-body);
+  font-size: 0.85rem;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.custom-select:focus {
+  border-color: var(--sl-color-accent);
+}
+
+.playground-params {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.param-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.param-group label {
+  font-size: 0.75rem;
+  font-family: var(--sl-font-body);
+  color: var(--sl-color-text-muted);
+}
+
+.param-input {
+  background-color: var(--sl-color-bg-inline-code);
+  color: var(--sl-color-text);
+  border: 1px solid var(--sl-color-border);
+  padding: 0.5rem;
+  font-family: var(--sl-font-body);
+  font-size: 0.85rem;
+  border-radius: 2px;
+}
+
+.param-input:focus {
+  border-color: var(--sl-color-accent);
+  outline: none;
+}
+
+.api-playground-results {
+  background-color: #141418;
+  display: flex;
+  flex-direction: column;
+}
+
+:root[data-theme="light"] .api-playground-results {
+  background-color: #1C1C22;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--sl-color-border);
+  font-family: var(--sl-font-display);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--sl-color-text-muted);
+}
+
+.status-indicator {
+  padding: 2px 8px;
+  background-color: #1a3a2a;
+  color: #30D158;
+  border-radius: 2px;
+  font-family: var(--sl-font-body);
+  font-size: 0.75rem;
+}
+
+.status-indicator.error {
+  background-color: #3d1b1b;
+  color: #FF453A;
+}
+
+:root[data-theme="light"] .status-indicator {
+  background-color: #e3fbeb;
+  color: #1F7A4D;
+}
+
+:root[data-theme="light"] .status-indicator.error {
+  background-color: #fdf2f2;
+  color: #B43434;
+}
+
+.result-body {
+  margin: 0;
+  padding: 1.5rem;
+  overflow: auto;
+  flex: 1;
+  max-height: 450px;
+}
+
+.result-body code {
+  font-family: var(--sl-font-body) !important;
+  font-size: 0.82rem !important;
+  color: #E6E6EE !important;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+:root[data-theme="light"] .result-body code {
+  color: #E6E6EE !important;
+}
+
+/* Styling for raw formulas without borders or copy buttons */
+.math-formula-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: var(--sl-font-body) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  color: var(--sl-color-accent) !important;
+  padding: 1rem 0 !important;
+  margin: 1.5rem 0 !important;
+  overflow-x: auto;
+  white-space: pre !important;
+}
+
+:root[data-theme="light"] .math-formula-box {
+  color: var(--sl-color-accent-high) !important;
+}

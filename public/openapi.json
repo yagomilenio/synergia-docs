@@ -1,0 +1,235 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Synergia REST API",
+    "description": "Especificación completa de los endpoints HTTP del ecosistema de cómputo distribuido Synergia. Administra autenticación, publicación de tareas, asignación de chunks a workers, mecanismos de consenso y observabilidad.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Servidor de desarrollo local"
+    },
+    {
+      "url": "https://api.synergia.dev",
+      "description": "Servidor de producción oficial"
+    }
+  ],
+  "paths": {
+    "/account": {
+      "post": {
+        "summary": "Crear una nueva cuenta",
+        "description": "Crea una cuenta voluntaria u organizadora. Hashea la contraseña con Argon2id, inicializa el balance de bienvenida y envía un correo electrónico de confirmación.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "cyberworker" },
+                  "email": { "type": "string", "format": "email", "example": "worker@synergia.dev" },
+                  "password": { "type": "string", "example": "securePassword123" }
+                },
+                "required": ["username", "email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cuenta creada con éxito",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "created",
+                  "username": "cyberworker",
+                  "initial_credits": 100.0,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjeWJlcndvcmtlciJ9..."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/token": {
+      "post": {
+        "summary": "Iniciar sesión (JWT)",
+        "description": "Inicia sesión local por credenciales y expide un JSON Web Token (JWT) con 24 horas de validez para autenticar las llamadas de los workers o publishers.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "cyberworker" },
+                  "password": { "type": "string", "example": "securePassword123" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token expedido correctamente",
+            "content": {
+              "application/json": {
+                "example": {
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjeWJlcndvcmtlciIsImV4cCI6MTcxOTk...",
+                  "expires_in": 86400
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task": {
+      "get": {
+        "summary": "Listar tareas disponibles",
+        "description": "Retorna la lista de todas las tareas activas y pausadas disponibles en la red.",
+        "parameters": [
+          {
+            "name": "subscribed",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean" },
+            "description": "Filtrar únicamente por tareas a las que tu nodo está suscrito"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listado de tareas",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "task-889a-4c22-b2df",
+                    "title": "Renderizado 3D de Blender - Escena 4",
+                    "repo_url": "https://github.com/synergia/blender-task-4",
+                    "status": "ACTIVE",
+                    "total_chunks": 120,
+                    "completed_chunks": 42
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Publicar una nueva tarea",
+        "description": "Crea una tarea en la red descontando el coste de publicación. Inicializa la cola RabbitMQ para la distribución de chunks.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Token JWT de sesión"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "Renderizado Blender" },
+                  "repo_url": { "type": "string", "example": "https://github.com/synergia/blender-task-4" },
+                  "config_toml": { "type": "string", "example": "[task]\ntotal_chunks = 120" }
+                },
+                "required": ["title", "repo_url"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tarea creada con éxito",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "task-889a-4c22-b2df",
+                  "status": "ACTIVE",
+                  "cost": 15.00
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task/{id}/process": {
+      "post": {
+        "summary": "Declarar inicio de procesamiento de un chunk",
+        "description": "El worker declara que comenzará a ejecutar un bloque de trabajo específico para reclamar los derechos de procesamiento exclusivos de ese rango.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "ID único de la tarea"
+          },
+          {
+            "name": "token",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Token JWT del worker"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "start_index": { "type": "integer", "example": 10 },
+                  "end_index": { "type": "integer", "example": 20 }
+                },
+                "required": ["start_index", "end_index"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Procesamiento registrado correctamente",
+            "content": {
+              "application/json": {
+                "example": {
+                  "process_id": "proc-41fa-8a12",
+                  "status": "PENDING",
+                  "deadline": "2026-08-28T18:30:00Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Métricas Prometheus",
+        "description": "Retorna métricas operativas detalladas del cluster en formato de texto compatible con Prometheus scraper.",
+        "responses": {
+          "200": {
+            "description": "Métricas de Prometheus exitosas",
+            "content": {
+              "text/plain": {
+                "example": "synergia_active_workers 142\nsynergia_tasks_total 12\nsynergia_credits_distributed_total 8540.22"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
