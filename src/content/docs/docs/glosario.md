@@ -46,7 +46,7 @@ Unidad de intercambio interna de la plataforma. Los créditos no tienen valor mo
 
 Valor numérico asociado a cada cuenta que refleja su historial de comportamiento en la plataforma. Se recalcula automáticamente tras cada cambio de canónico, penalizando a los workers cuyos resultados son sustituidos por los de otros y recompensando a los que consistentemente producen resultados correctos.
 
-La reputación se utiliza para mitigar a posibles atacantes, forzando a que tengan que recuperarla antes de procesar nuevos bloques de tareas de otros usuarios. Tampoco podrán publicar nuevas tareas, y las que tienen actualmente quedan pausadas. Para recuperar su reputación, un usuario debe realizar un número determinado de confirmaciones válidas. Ver la fórmula completa en [Modelo Económico](/docs/modelo-economico/#algoritmo-de-reputación-ponderada).
+La reputación se utiliza para mitigar a posibles atacantes, forzando a que tengan que recuperarla antes de procesar nuevos bloques de tareas de otros usuarios. Tampoco podrán publicar nuevas tareas, y las que tienen actualmente quedan pausadas. Para recuperar su reputación, un usuario debe realizar un número determinado de confirmaciones válidas. Ver la fórmula completa en [Modelo Económico](../modelo-economico/#algoritmo-de-reputación-ponderada).
 
 ---
 

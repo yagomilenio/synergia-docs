@@ -70,5 +70,5 @@ Una vez levantada la infraestructura con Docker Compose y tras acceder a Grafana
 :::tip[Dashboard Operativo]
 A continuación se muestra una captura real del panel de monitorización unificado en Grafana, en el cual se observan los picos de consumo computacional, las tasas de éxito de procesamiento de bloques, los balances económicos de créditos globales y el estado de salud de RabbitMQ:
 
-![Cuadro de mando unificado en Grafana de Synergia](/images/tfg/grafana-dashboard.png)
+![Cuadro de mando unificado en Grafana de Synergia](../../../../public/images/tfg/grafana-dashboard.png)
 :::

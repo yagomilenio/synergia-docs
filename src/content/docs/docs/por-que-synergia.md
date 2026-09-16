@@ -43,13 +43,13 @@ Por último, herramientas como **GitHub Actions** o **GitLab CI** permiten la ej
 
 ## Comparativa de plataformas
 
-| Plataforma | Incentivos | Tareas arbitrarias | Aislamiento | Verificación | Participación abierta | Orientación |
-|---|---|---|---|---|---|---|
-| BOINC | Cosmético | Parcial | Parcial | Sí | No | Científica |
-| Folding@Home | Cosmético | No | Parcial | - | No | Científica biomédica |
-| SETI | Cosmético | No | Parcial | Sí | No | Científica astronómica |
-| Golem Network | Sí | Sí | Sí | Sí | Sí | General |
-| **Synergia** | **Sí** | **Sí** | **Sí** | **Sí** | **Sí** | **General** |
+| Plataforma | Incentivos | Tareas arbitrarias | Aislamiento | Verificación | Participación abierta | Autoalojable | Orientación |
+|---|---|---|---|---|---|---|---|
+| BOINC | Cosmético | Parcial | Parcial | Sí | No | Sí | Científica |
+| Folding@Home | Cosmético | No | Parcial | — | No | No | Científica biomédica |
+| SETI | Cosmético | No | Parcial | Sí | No | No | Científica astronómica |
+| Golem Network | Sí | Sí | Sí | Sí | Sí | No | General |
+| **Synergia** | **Sí** | **Sí** | **Sí** | **Sí** | **Sí** | **Sí** | **General** |
 
 *La evaluación se basa en una escala cualitativa: **Sí** (cumple completamente el criterio), **No** (no lo soporta), **Parcial** (lo soporta solo en determinados casos o con limitaciones funcionales relevantes) y **-** (información no disponible o no compartida públicamente).*
 
@@ -65,9 +65,9 @@ Golem Network presenta una arquitectura que, en ciertos aspectos, resulta compar
 
 * **Verificación cruzada de resultados.** Permite detectar nodos que reportan resultados fraudulentos, garantizando la integridad del cómputo distribuido sin necesidad de una autoridad central de confianza.
 
-* **Tareas arbitrarias.** Las tareas no han de escribirse en lenguajes específicos; simplemente deben seguir una cierta estructura con configuraciones básicas (ver [Contrato del Makefile](/docs/contrato-makefile/) y [config.toml](/docs/config-toml/)), lo que garantiza la ejecución de tareas arbitrarias.
+* **Tareas arbitrarias.** Las tareas no han de escribirse en lenguajes específicos; simplemente deben seguir una cierta estructura con configuraciones básicas (ver [Contrato del Makefile](../contrato-makefile/) y [config.toml](../config-toml/)), lo que garantiza la ejecución de tareas arbitrarias.
 
-* **Aislamiento real desde el diseño.** Synergia permite la ejecución aislada de tareas mediante contenedores, reduciendo significativamente los riesgos de seguridad e imposibilitando de forma directa la ejecución de las tareas en el sistema operativo anfitrión. La mayoría de plataformas del ecosistema implementan su versión local sin un aislamiento adecuado y posteriormente la encapsulan en contenedores; Synergia parte de la premisa de que únicamente es posible ejecutar tareas si existe una capacidad efectiva de virtualización (ver [Aislamiento del Worker](/docs/worker-aislamiento/)).
+* **Aislamiento real desde el diseño.** Synergia permite la ejecución aislada de tareas mediante contenedores, reduciendo significativamente los riesgos de seguridad e imposibilitando de forma directa la ejecución de las tareas en el sistema operativo anfitrión. La mayoría de plataformas del ecosistema implementan su versión local sin un aislamiento adecuado y posteriormente la encapsulan en contenedores; Synergia parte de la premisa de que únicamente es posible ejecutar tareas si existe una capacidad efectiva de virtualización (ver [Aislamiento del Worker](../worker-aislamiento/)).
 
 * **Modo autoalojado.** A diferencia de Golem Network, que por su naturaleza descentralizada carece de un punto de control centralizado, Synergia puede desplegarse en modo autoalojado, permitiendo su utilización en entornos controlados con un número reducido de máquinas e, incluso, la eliminación de costes asociados a la ejecución de tareas cuando así se requiera.
 

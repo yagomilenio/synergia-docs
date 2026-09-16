@@ -82,7 +82,7 @@ Al subir un resultado:
    * Se realiza la transferencia completa al nuevo worker canónico legítimo desde el balance del Publisher.
    * Se reparte un bono de incentivo entre los validadores honestos que forzaron el cambio (financiado por `SYSTEM_FEES`).
 
-![Flujo de transacciones ante un cambio de canónico](/images/tfg/transacciones-cambio-canonico.png)
+![Flujo de transacciones ante un cambio de canónico](../../../../public/images/tfg/transacciones-cambio-canonico.png)
 
 ---
 
@@ -127,6 +127,6 @@ sigma_i = sqrt( SS_i / i )
 Coste Estimado = (media_i + sigma_i) × k
 </pre>
 
-![Evolución del coste estimado con Welford](/images/tfg/welford-evolution.png)
+![Evolución del coste estimado con Welford](../../../../public/images/tfg/welford-evolution.png)
 
 Si el saldo libre del Publisher cae por debajo de este umbral de seguridad, **todas sus tareas se pausan automáticamente** y las colas de RabbitMQ se depuran, impidiendo que los workers sigan procesando trabajo que el publicador no podrá cubrir financieramente.

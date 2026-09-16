@@ -34,7 +34,7 @@ El esquema relacional de Synergia divide el dominio de negocio en cuatro subsist
 
 A continuación se presenta el diagrama entidad-relación global del sistema, que detalla las trece tablas del modelo de persistencia de Oracle DB y sus restricciones de integridad referencial:
 
-![Diagrama Entidad-Relación de Synergia](/images/tfg/diagrama-entidad-relacion.png)
+![Diagrama Entidad-Relación de Synergia](../../../../public/images/tfg/diagrama-entidad-relacion.png)
 
 ---
 

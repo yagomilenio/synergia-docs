@@ -6,7 +6,7 @@ description: Guía de inicio rápido para desplegar el servidor de Synergia y co
 Esta guía te guiará para poner en marcha una instancia local completa de Synergia, incluyendo el servidor orquestador y un nodo cliente (worker) configurado para procesar tareas y recibir créditos, en menos de 5 minutos.
 
 :::tip[¿Vas a desplegar en serio?]
-Esta guía cubre lo mínimo para tener Synergia funcionando en local. Para la referencia completa de variables de entorno, puertos, servicios de `docker-compose.yml` y solución de problemas, consulta [Configuración del Servidor](/docs/configuracion-servidor/) y [Configuración del Cliente](/docs/configuracion-cliente/).
+Esta guía cubre lo mínimo para tener Synergia funcionando en local. Para la referencia completa de variables de entorno, puertos, servicios de `docker-compose.yml` y solución de problemas, consulta [Configuración del Servidor](../configuracion-servidor/) y [Configuración del Cliente](../configuracion-cliente/).
 :::
 
 ---
@@ -56,8 +56,15 @@ curl http://localhost:8000/metrics
 
 El cliente está implementado en Python y requiere **Python 3.10+** y **Docker** instalado en la máquina que funcionará como worker.
 
-### Instalación de dependencias
-Clona el repositorio de `synergia-client` e instala el CLI en modo editable:
+### Instalación del paquete
+
+Al estar publicado en PyPI, puedes instalar el CLI directamente de la forma más rápida y sencilla:
+
+```bash
+pip install synergia
+```
+
+Alternativamente, si deseas realizar desarrollos o instalarlo desde el código fuente, puedes clonar el repositorio de `synergia-client` e instalarlo en modo editable:
 
 ```bash
 git clone https://github.com/yagomilenio/synergia-client.git

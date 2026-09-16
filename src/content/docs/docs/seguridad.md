@@ -37,7 +37,7 @@ Una vez que el usuario se autentica con éxito (local o vía OAuth), el servidor
 
 ## Integridad y Seguridad en el Cómputo (Resumen)
 
-Para obtener una descripción profunda sobre las políticas de seguridad en la ejecución, consulta la guía dedicada de [Internals del Worker y Aislamiento](/docs/worker-aislamiento). Las defensas clave implementadas son:
+Para obtener una descripción profunda sobre las políticas de seguridad en la ejecución, consulta la guía dedicada de [Internals del Worker y Aislamiento](../worker-aislamiento/). Las defensas clave implementadas son:
 
 * **Aislamiento Docker:** Todo código de terceros se ejecuta bajo un usuario sin privilegios de administración (`worker`) y con límites de RAM/CPU por cgroups.
 * **Cortafuegos iptables:** Se bloquea toda comunicación de red saliente dentro del contenedor por defecto. Solo se añaden excepciones para resoluciones DNS y para las direcciones IP resueltas asociadas a los dominios autorizados de la lista `[network].allowed_hosts`.

@@ -3,7 +3,7 @@ title: Configuración del Servidor
 description: Referencia completa de despliegue del backend de Synergia — variables de entorno, servicios de docker-compose, puertos y troubleshooting.
 ---
 
-Esta página es la referencia exhaustiva para desplegar `synergia-server` en serio, más allá del arranque rápido de [Primeros Pasos](/docs/primeros-pasos/). Cubre cada variable de entorno, cada servicio de la pila Docker y los problemas más comunes al levantarla.
+Esta página es la referencia exhaustiva para desplegar `synergia-server` en serio, más allá del arranque rápido de [Primeros Pasos](../primeros-pasos/). Cubre cada variable de entorno, cada servicio de la pila Docker y los problemas más comunes al levantarla.
 
 ---
 
@@ -57,7 +57,7 @@ cp infra/docker/.env.example infra/docker/.env
 | `RABBITMQ_PASSWORD` | rabbitmq | Contraseña de la cola de mensajería RabbitMQ. |
 
 :::note[¿Por qué hay variables de MariaDB si la base de datos es Oracle?]
-`MARIADB_ROOT_PASSWORD` y `MARIADB_PASSWORD` son variables heredadas de una etapa anterior del proyecto, en la que la capa de acceso a datos implementaba el [patrón estrategia](/docs/patrones-de-diseno/#estrategia-retirado) para soportar tanto MySQL/MariaDB como Oracle. Tras la migración definitiva a Oracle Database Free (necesaria para aprovechar sus *Blockchain Tables*), este componente se retiró, pero las variables se mantienen en `.env.example` por compatibilidad.
+`MARIADB_ROOT_PASSWORD` y `MARIADB_PASSWORD` son variables heredadas de una etapa anterior del proyecto, en la que la capa de acceso a datos implementaba el [patrón estrategia](../patrones-de-diseno/#estrategia-retirado) para soportar tanto MySQL/MariaDB como Oracle. Tras la migración definitiva a Oracle Database Free (necesaria para aprovechar sus *Blockchain Tables*), este componente se retiró, pero las variables se mantienen en `.env.example` por compatibilidad.
 :::
 
 ---
@@ -71,7 +71,7 @@ cp infra/docker/.env.example infra/docker/.env
 | `rest_api` | build desde `Dockerfile` | `8000` | API REST (FastAPI + Uvicorn), arrancada con `--reload` en modo desarrollo. Depende de que `rabbitmq` esté *healthy*. |
 | `ws_api` | build desde `Dockerfile` | `8001` | API WebSocket (FastAPI + Uvicorn), consumidor de las colas de RabbitMQ. Depende de que `rabbitmq` esté *healthy*. |
 | `prometheus` | `prom/prometheus` | `9090` | Scrapea las métricas expuestas por `rest_api`, `ws_api` y RabbitMQ. |
-| `grafana` | `grafana/grafana` | `3000` | Dashboards de monitorización (ver [Métricas](/docs/metricas/)). |
+| `grafana` | `grafana/grafana` | `3000` | Dashboards de monitorización (ver [Métricas](../metricas/)). |
 | `test` | build local (`--profile test`) | — | Corre la suite de `pytest`. No se levanta salvo que se invoque el perfil `test` explícitamente. |
 | `ngrok` | `ngrok/ngrok:latest` | `4040` | Túnel de desarrollo para exponer `rest_api`/`ws_api` públicamente sin IP fija. |
 
@@ -145,6 +145,6 @@ Sustituye `<servicio>` por `oracle`, `rabbitmq`, `rest_api`, `ws_api`, `promethe
 
 ## Referencias relacionadas
 
-* [Arquitectura del Sistema](/docs/arquitectura/) — por qué se eligió cada una de estas piezas (FastAPI, RabbitMQ, Oracle).
-* [Métricas Prometheus](/docs/metricas/) — catálogo completo de métricas expuestas y configuración del dashboard de Grafana.
-* [API REST](/docs/api-rest/) y [API WebSocket](/docs/api-websocket/) — especificación de endpoints una vez el servidor está en pie.
+* [Arquitectura del Sistema](../arquitectura/) — por qué se eligió cada una de estas piezas (FastAPI, RabbitMQ, Oracle).
+* [Métricas Prometheus](../metricas/) — catálogo completo de métricas expuestas y configuración del dashboard de Grafana.
+* [API REST](../api-rest/) y [API WebSocket](../api-websocket/) — especificación de endpoints una vez el servidor está en pie.

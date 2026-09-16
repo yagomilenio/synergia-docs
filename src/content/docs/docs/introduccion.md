@@ -3,7 +3,7 @@ title: Introducción a Synergia
 description: Red de cómputo distribuido voluntario con verificación e incentivos económicos.
 ---
 
-**Synergia** es una plataforma de computación distribuida voluntaria y descentralizada diseñada para democratizar el acceso a la potencia de cálculo. Permite a cualquier usuario publicar tareas computacionalmente costosas en forma de repositorios de GitHub y delegar su procesamiento a una red heterogénea de nodos voluntarios (**workers**), garantizando un entorno aislado, seguro y con verificación cruzada de resultados.
+**Synergia** es una plataforma de computación distribuida voluntaria y centralizada diseñada para democratizar el acceso a la potencia de cálculo. Permite a cualquier usuario publicar tareas computacionalmente costosas en forma de repositorios de GitHub y delegar su procesamiento a una red heterogénea de nodos voluntarios (**workers**), garantizando un entorno aislado, seguro y con verificación cruzada de resultados.
 
 A cambio de aportar sus recursos de hardware (CPU, RAM, GPU), los workers acumulan **créditos internos** proporcionales al coste computacional real incurrido. Estos créditos se pueden utilizar posteriormente para publicar tareas propias, creando una economía circular de intercambio directo de potencia de cálculo sin necesidad de alquilar costosa infraestructura en la nube.
 
@@ -55,7 +55,7 @@ Además de las cuentas de usuario, la plataforma mantiene un conjunto de cuentas
 | `mint` | Emite los créditos iniciales a los nuevos usuarios que se registran en la plataforma. |
 | `fees` | Recibe el coste de publicación de cada tarea y paga las recompensas a los workers que confirman resultados canónicos. |
 
-Un ejemplo directo de su funcionamiento son los pagos de la tarea génesis del sistema (ver [Modelo Económico](/docs/modelo-economico/#el-arranque-en-frío-y-la-tarea-génesis)): en ese caso el publicador es una cuenta interna, que realiza todos los pagos y cuenta con saldo inacabable.
+Un ejemplo directo de su funcionamiento son los pagos de la tarea génesis del sistema (ver [Modelo Económico](../modelo-economico/#el-arranque-en-frío-y-la-tarea-génesis)): en ese caso el publicador es una cuenta interna, que realiza todos los pagos y cuenta con saldo inacabable.
 
 ---
 

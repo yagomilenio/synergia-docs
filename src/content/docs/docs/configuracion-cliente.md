@@ -3,7 +3,7 @@ title: Configuración del Cliente
 description: Referencia completa del cliente CLI de Synergia — requisitos del sistema, ficheros de configuración local y estructura del proyecto.
 ---
 
-Esta página es la referencia exhaustiva de `synergia-client`: qué necesita tu máquina para funcionar como worker, y qué contiene cada fichero de configuración local. Para el flujo de comandos paso a paso, ver [Primeros Pasos](/docs/primeros-pasos/) y [Referencia del CLI](/docs/cli/).
+Esta página es la referencia exhaustiva de `synergia-client`: qué necesita tu máquina para funcionar como worker, y qué contiene cada fichero de configuración local. Para el flujo de comandos paso a paso, ver [Primeros Pasos](../primeros-pasos/) y [Referencia del CLI](../cli/).
 
 ---
 
@@ -16,19 +16,27 @@ Esta página es la referencia exhaustiva de `synergia-client`: qué necesita tu 
 
 ## Instalación
 
+Al estar el cliente publicado en PyPI, la opción más recomendada y directa es realizar una instalación limpia con `pip`:
+
+```bash
+pip install synergia
+```
+
+Si prefieres instalarlo desde el código fuente o vas a realizar desarrollos sobre el cliente, clona el repositorio de `synergia-client` e instálalo en modo editable:
+
 ```bash
 git clone https://github.com/yagomilenio/synergia-client.git
 cd synergia-client
 pip install -e .
 ```
 
-Esto instala el comando `synergia` en el sistema (`pyproject.toml` lo declara como `[project.scripts] synergia = "client.client:main"`), junto con todas las dependencias declaradas.
+Cualquiera de los dos métodos registrará el comando `synergia` en el sistema (el archivo `pyproject.toml` lo declara bajo `[project.scripts] synergia = "client.client:main"`), instalando a su vez todas las dependencias requeridas.
 
 ---
 
 ## Configuración del sistema: `perf`
 
-El cliente usa `perf` para medir los ciclos de CPU consumidos por cada tarea — es la base del [cálculo de coste en créditos](/docs/modelo-economico/#fórmulas-de-cálculo-de-coste-de-ejecución). Por defecto, el kernel Linux restringe su uso a `root`. Es necesario bajar el nivel de *paranoia* a 2 o menos:
+El cliente usa `perf` para medir los ciclos de CPU consumidos por cada tarea — es la base del [cálculo de coste en créditos](../modelo-economico/#fórmulas-de-cálculo-de-coste-de-ejecución). Por defecto, el kernel Linux restringe su uso a `root`. Es necesario bajar el nivel de *paranoia* a 2 o menos:
 
 ```bash
 # Temporal (hasta el próximo reinicio)
@@ -167,6 +175,6 @@ synergia start-scheduler --mode round-robin --on-idle
 
 ## Referencias relacionadas
 
-* [Referencia del CLI](/docs/cli/) — listado completo de comandos y flags.
-* [Aislamiento del Worker](/docs/worker-aislamiento/) — cómo se sandboxa el contenedor que ejecuta cada tarea.
-* [Caso de Uso Completo](/docs/caso-de-uso/) — este mismo flujo aplicado a una tarea real, paso a paso.
+* [Referencia del CLI](../cli/) — listado completo de comandos y flags.
+* [Aislamiento del Worker](../worker-aislamiento/) — cómo se sandboxa el contenedor que ejecuta cada tarea.
+* [Caso de Uso Completo](../caso-de-uso/) — este mismo flujo aplicado a una tarea real, paso a paso.

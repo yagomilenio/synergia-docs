@@ -75,44 +75,7 @@ La API REST de Synergia orquesta todas las operaciones de negocio del ecosistema
 | :--- | :--- | :--- | :--- |
 | **`GET`** | `/metrics` | No | Expone las métricas operativas del servidor REST en formato compatible con Prometheus (puertos de trabajadores activos, volumen físico de subidas, créditos pagados, etc.). |
 
----
 
-## Consola Interactiva de Pruebas (Postman Sandbox)
-
-Utiliza la consola interactiva integrada a continuación para simular y comprender en profundidad la estructura de las peticiones HTTP y las respuestas JSON/Prometheus del ecosistema Synergia:
-
-<div class="api-playground-container">
-  <div class="api-playground-sidebar">
-    <h3>Prueba de Endpoints (Postman Sandbox)</h3>
-    <p class="playground-intro">Interactúa con los endpoints del protocolo Synergia directamente desde la documentación.</p>
-    
-    <div class="endpoint-selector">
-      <label for="endpoint-select">Selecciona Operación:</label>
-      <select id="endpoint-select" class="custom-select">
-        <option value="create_account">POST /account (Crear Cuenta)</option>
-        <option value="login">POST /token (Autenticación JWT)</option>
-        <option value="list_tasks">GET /task (Listar Tareas)</option>
-        <option value="create_task">POST /task (Publicar Tarea)</option>
-        <option value="declare_process">POST /task/{id}/process (Procesar Chunk)</option>
-        <option value="metrics">GET /metrics (Métricas Prometheus)</option>
-      </select>
-    </div>
-
-    <div class="playground-params" id="playground-params">
-      <!-- Se inyecta dinámicamente -->
-    </div>
-
-    <button id="btn-send-request" class="btn-send">Enviar Petición</button>
-  </div>
-
-  <div class="api-playground-results">
-    <div class="result-header">
-      <span>Consola de Respuesta (Sandbox)</span>
-      <span class="status-indicator" id="response-status">200 OK</span>
-    </div>
-    <pre class="result-body"><code id="response-body">// Selecciona un endpoint y presiona ejecutar</code></pre>
-  </div>
-</div>
 
 <script is:inline>
   // Datos simulados/ejemplos de endpoints

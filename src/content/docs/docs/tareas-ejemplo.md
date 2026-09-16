@@ -5,7 +5,7 @@ description: Análisis técnico detallado y código fuente de los repositorios d
 
 Para validar las capacidades de la plataforma y facilitar la curva de aprendizaje a nuevos desarrolladores, Synergia dispone de **seis repositorios demostrativos oficiales**. Estos ejemplos cubren campos heterogéneos como la criptografía, la biomedicina, la inteligencia artificial (LLMs/Visión) y el renderizado 3D.
 
-Cada uno de estos repositorios ha sido probado y ejecutado de forma distribuida en la red cumpliendo estrictamente con el contrato del [Makefile](/docs/contrato-makefile) y el formato del manifiesto [config.toml](/docs/config-toml).
+Cada uno de estos repositorios ha sido probado y ejecutado de forma distribuida en la red cumpliendo estrictamente con el contrato del [Makefile](../contrato-makefile/) y el formato del manifiesto [config.toml](../config-toml/).
 
 ---
 
@@ -152,7 +152,7 @@ run:
 	rm -rf cores work
 ```
 
-![Panel de administración de los clientes de Folding@home](/images/tfg/foldingathome-dashboard.png)
+![Panel de administración de los clientes de Folding@home](../../../../public/images/tfg/foldingathome-dashboard.png)
 
 ---
 
@@ -222,7 +222,7 @@ clean:
 	rm -rf outputs
 ```
 
-![Métricas y descripción del renderizado en Blender](/images/tfg/blender-metrics.png)
+![Métricas y descripción del renderizado en Blender](../../../../public/images/tfg/blender-metrics.png)
 
 ---
 

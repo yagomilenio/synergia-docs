@@ -9,7 +9,7 @@ Estas son las líneas de trabajo futuro más prometedoras para Synergia, ordenad
 
 ## 1. Proxy transparente para captura de tráfico
 
-La implementación de un proxy HTTP/HTTPS transparente en los contenedores permitiría interceptar todo el tráfico de descarga independientemente de la herramienta utilizada, eliminando la dependencia actual en los *wrappers* de `curl` y `wget` (ver [Aislamiento del Worker](/docs/worker-aislamiento/)).
+La implementación de un proxy HTTP/HTTPS transparente en los contenedores permitiría interceptar todo el tráfico de descarga independientemente de la herramienta utilizada, eliminando la dependencia actual en los *wrappers* de `curl` y `wget` (ver [Aislamiento del Worker](../worker-aislamiento/)).
 
 ## 2. Clasificación de tareas verificables en `config.toml`
 

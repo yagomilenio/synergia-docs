@@ -13,9 +13,9 @@ El sistema separa estrictamente las operaciones transaccionales puntuales del fl
 
 El siguiente esquema representa los servicios en tiempo de ejecución, sus puertos de comunicación, protocolos y flujos de datos entre el lado cliente y el lado servidor:
 
-![Diagrama de Arquitectura General de Synergia](/images/tfg/arquitectura-general.png)
+![Diagrama de Arquitectura General de Synergia](../../../../public/images/tfg/arquitectura-general.png)
 
-### Representación del Flujo de Componentes (Mermaid)
+### Representación del Flujo de Componentes
 
 ```mermaid
 graph TD
@@ -123,7 +123,7 @@ Se configuró el pool de conexiones al nivel de aislamiento de transacciones má
 En un entorno concurrente, el cambio del resultado canónico de un proceso implica revertir el saldo de créditos al worker antiguo y transferir créditos al nuevo worker de forma paralela. Un nivel de aislamiento inferior (como *Read Committed*) permitiría a dos transacciones concurrentes leer el mismo estado e incurrir en condiciones de carrera (doble pago o desbalanceo financiero de créditos de la red). `SERIALIZABLE` evita lecturas sucias, fantasma o no repetibles forzando la consistencia matemática absoluta de la economía interna de la plataforma.
 
 #### Blockchain Tables de Oracle
-Se migró el motor de datos a Oracle Database para aprovechar de forma nativa sus **Blockchain Tables**. Estas tablas son libros contables inmutables donde cada fila contiene un hash criptográfico enlazado con la fila anterior mediante **SHA2-512** (ver sección de [Modelo de Datos](/docs/modelo-de-datos)). Esto protege el historial transaccional de créditos frente a manipulaciones internas (incluso de usuarios administradores con acceso a la base de datos).
+Se migró el motor de datos a Oracle Database para aprovechar de forma nativa sus **Blockchain Tables**. Estas tablas son libros contables inmutables donde cada fila contiene un hash criptográfico enlazado con la fila anterior mediante **SHA2-512** (ver sección de [Modelo de Datos](../modelo-de-datos/)). Esto protege el historial transaccional de créditos frente a manipulaciones internas (incluso de usuarios administradores con acceso a la base de datos).
 
 ---
 

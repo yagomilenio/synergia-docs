@@ -170,7 +170,7 @@ El worker abre una conexión bidireccional persistente contra `/ws/task/{task_id
 
 El worker corre un bucle continuo de procesamiento local automatizado:
 1. **Sincronización:** Comprueba si el snapshot hash local coincide con el del servidor.
-2. **Entorno Aislado:** Si es el primer bloque, levanta el contenedor Docker e invoca el target `make setup` en el directorio compartido `/repo` (ver [Seguridad](/docs/seguridad)).
+2. **Entorno Aislado:** Si es el primer bloque, levanta el contenedor Docker e invoca el target `make setup` en el directorio compartido `/repo` (ver [Seguridad](../seguridad/)).
 3. **Descarga de Recursos:** Descarga ficheros de datos externos especificados en la directiva `[download]` de `config.toml`.
 4. **Tráfico de Red:** Aplica restricciones de firewall bloqueando todo tráfico excepto hacia los dominios autorizados de `[network].allowed_hosts`.
 5. **Ejecución del Chunk:** Limpia restos de ejecuciones anteriores con `make clean` e invoca `make run` inyectando las variables de entorno asociadas (p. ej. `START=... END=...`).
@@ -193,12 +193,12 @@ Activan la verificación cruzada por consenso.
 2. **Cambio de Canónico:** Si el nuevo resultado altera el consenso canónico que existía previamente, el servidor **revierte el pago** al antiguo worker sospechoso de fraude (reclamando créditos a su cuenta y reduciendo su reputación), transfiere el pago completo al nuevo worker canónico legítimo desde el balance del Publisher.
 3. **Confirmación de Canónico:** Si el nuevo resultado coincide con el canónico existente, el worker validador recibe una fracción de incentivo por confirmación desde `SYSTEM_FEES`.
 
-![Diagrama de flujo de subida de resultados en tareas deterministas con resolución de disputas](/images/tfg/flujo-determinista-disputas.png)
+![Diagrama de flujo de subida de resultados en tareas deterministas con resolución de disputas](../../../../public/images/tfg/flujo-determinista-disputas.png)
 
 ### Tareas No Deterministas
 No admiten disputa matemática (p. ej. simulaciones estocásticas). El primer resultado correcto que se suba es aceptado automáticamente y el worker cobra el 100% de los créditos directamente desde el balance del Publisher.
 
-![Diagrama de flujo de subida de resultados en tareas no deterministas](/images/tfg/flujo-no-determinista.png)
+![Diagrama de flujo de subida de resultados en tareas no deterministas](../../../../public/images/tfg/flujo-no-determinista.png)
 
 ---
 
