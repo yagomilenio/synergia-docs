@@ -15,48 +15,6 @@ El siguiente esquema representa los servicios en tiempo de ejecución, sus puert
 
 ![Diagrama de Arquitectura General de Synergia](../../../../public/images/tfg/arquitectura-general.png)
 
-### Representación del Flujo de Componentes
-
-```mermaid
-graph TD
-    subgraph Cliente ["Cliente CLI / Worker"]
-        CLI["synergia CLI (Interacción Humana)"]
-        SCH["Scheduler (Planificador)"]
-        WRK["Worker Daemon (Ejecutor)"]
-        CON["Contenedor Docker (Aislamiento)"]
-        
-        CLI --> SCH
-        SCH --> WRK
-        WRK --> CON
-    end
-
-    subgraph Red ["Capa de Exposición"]
-        NG["ngrok (Túnel HTTPS / WSS)"]
-    end
-
-    subgraph Servidor ["Backend (Docker Compose)"]
-        REST["API REST: FastAPI (Puerto 8000)"]
-        WS["API WebSocket: FastAPI (Puerto 8001)"]
-        RMQ["RabbitMQ: AMQP Broker (Puerto 5672)"]
-        DB[(Oracle DB Free - Puerto 1521)]
-        PROM["Prometheus: Métricas (Puerto 9090)"]
-        GRAF["Grafana: Visualización (Puerto 3000)"]
-        
-        REST --> DB
-        REST --> PROM
-        WS --> RMQ
-        WS --> DB
-        WS --> PROM
-        GRAF --> PROM
-    end
-
-    CLI -.->|HTTPS / REST| NG
-    WRK -.->|WSS / WebSocket| NG
-    NG -.->|Puerto 8000| REST
-    NG -.->|Puerto 8001| WS
-```
-
----
 
 ## Servicios en Tiempo de Ejecución
 

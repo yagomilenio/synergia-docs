@@ -40,24 +40,8 @@ A continuación se presenta el diagrama entidad-relación global del sistema, qu
 
 ## Claves Foráneas Circulares en el Procesamiento
 
-Un aspecto destacado del diseño relacional del sistema es la relación bidireccional y circular establecida entre las tablas `process` y `execution`:
+Un aspecto destacado del diseño relacional del sistema es la relación bidireccional y circular establecida entre las tablas `process` y `execution`.
 
-```mermaid
-erDiagram
-    process {
-        NUMBER id PK
-        NUMBER task_id FK
-        NUMBER canonical_execution_id FK
-    }
-    execution {
-        NUMBER id PK
-        NUMBER process_id FK
-        NUMBER account_id FK
-        NUMBER result_file_id FK
-    }
-    process ||--o{ execution : "tiene múltiples intentos"
-    process ||--o| execution : "apunta a su ejecución canónica"
-```
 
 ### Justificación de Diseño
 1. Un **proceso** (chunk de trabajo) puede ser ejecutado de forma redundante por varios workers distintos para realizar la verificación cruzada. Por lo tanto, un proceso tiene una relación de **1 a N** con las **ejecuciones** (`execution.process_id` apunta a `process.id`).

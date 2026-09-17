@@ -152,7 +152,7 @@ run:
 	rm -rf cores work
 ```
 
-![Panel de administración de los clientes de Folding@home](../../../../public/images/tfg/foldingathome-dashboard.png)
+![Panel de administración de los clientes de Folding@home](../../../../public/images/tfg/blender-metrics.png)
 
 ---
 
@@ -222,7 +222,7 @@ clean:
 	rm -rf outputs
 ```
 
-![Métricas y descripción del renderizado en Blender](../../../../public/images/tfg/blender-metrics.png)
+![Métricas y descripción del renderizado en Blender](../../../../public/images/task-blender.png)
 
 ---
 

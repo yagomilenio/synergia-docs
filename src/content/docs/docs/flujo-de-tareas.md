@@ -15,37 +15,35 @@ El siguiente diagrama detalla el ciclo de vida completo de un bloque de trabajo 
 sequenceDiagram
     autonumber
     actor P as Publisher
-    participant S as Servidor (REST/WS)
-    participant Q as RabbitMQ (Cola)
-    participant W as Worker (Cliente)
-    participant C as Contenedor Docker
-    participant DB as Oracle DB
+    participant S as "Servidor (REST/WS)"
+    participant Q as "RabbitMQ (Cola)"
+    participant W as "Worker (Cliente)"
+    participant C as Contenedor_Docker
+    participant DB as Oracle_DB
 
-    P->>S: "POST /task (Git URL, commit, snapshot hash)"
+    P->>S: POST /task (Git URL, commit, snapshot hash)
     Note over S: Valida saldo y contrasta hash de integridad
-    S->>S: "Calcula b (Tamaño bloque) con presupuesto menor a 512 KB"
-    S->>Q: "Publica mensajes de chunking con index y count"
-    S-->>P: "Confirmación (Tarea ACTIVE)"
+    S->>S: Calcula b (Tamaño bloque) con presupuesto menor a 512 KB
+    S->>Q: Publica mensajes de chunking con index y count
+    S-->>P: Confirmación (Tarea ACTIVE)
 
-    W->>S: "Handshake WebSocket (Conexión persistente)"
-    W->>S: "Mensaje de petición next con n = N"
-    S->>Q: "Consume N mensajes de la cola"
-    Q-->>S: "Mensajes de chunks"
-    S-->>W: "Envía lista de chunks"
+    W->>S: Handshake WebSocket (Conexión persistente)
+    W->>S: Mensaje de petición next con n = N
+    S->>Q: Consume N mensajes de la cola
+    Q-->>S: Mensajes de chunks
+    S-->>W: Envía lista de chunks
 
     Note over W: Primera vez: levanta contenedor y ejecuta setup
-    W->>C: "cd /repo y ejecuta make clean; make run"
+    W->>C: cd /repo y ejecuta make clean && make run
     Note over C: Ejecución restringida (iptables + sin privilegios)
-    C-->>W: "Ficheros de salida y telemetrías (perf, nvidia-smi)"
-    W->>W: "Empaqueta salida en tar determinista"
+    C->>C: Empaqueta salida y telemetrías (perf, nvidia-smi) en tar determinista
 
-    W->>S: "POST /task/id/process/pid/execution/eid/result (Upload tar + métricas)"
-    
-    alt Tarea Determinista (Consenso de Mayoría)
-        S->>S: "Recalcula resultado canónico por hash SHA-256"
-        S->>DB: "Ledger (transfer): Paga créditos al canónico y validadores honestos"
-    else Tarea No Determinista (Pago Inmediato)
-        S->>DB: "Transfiere créditos del Publisher al Worker directamente"
+    C->>S: POST /task/id/process/pid/execution/eid/result (Upload tar + metricas)
+    alt Tarea Determinista - Consenso de Mayoria
+        S->>S: Recalcula resultado canonico por hash SHA-256
+        S->>DB: Ledger (transfer) - Paga creditos al canonico y validadores honestos
+    else Tarea No Determinista - Pago Inmediato
+        S->>DB: Transfiere creditos del Publisher al Worker directamente
     end
 ```
 
