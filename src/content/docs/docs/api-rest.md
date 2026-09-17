@@ -10,7 +10,7 @@ La API REST de Synergia orquesta todas las operaciones de negocio del ecosistema
     <strong>Documentación en Swagger UI</strong>
     <p>Explora de forma interactiva y detallada todos los endpoints del protocolo Synergia en Swagger UI.</p>
   </div>
-  <a href="/swagger.html" class="openapi-download-btn">ABRIR SWAGGER PLAYGROUND</a>
+  <a href="../../swagger.html" class="openapi-download-btn">ABRIR SWAGGER PLAYGROUND</a>
 </div>
 
 ---

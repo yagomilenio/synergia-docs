@@ -2,102 +2,451 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Synergia REST API",
-    "description": "Especificación completa de los endpoints HTTP del ecosistema de cómputo distribuido Synergia. Administra autenticación, publicación de tareas, asignación de chunks a workers, mecanismos de consenso y observabilidad.",
-    "version": "1.0.0"
+    "description": "Especificación de los endpoints HTTP del ecosistema de cómputo distribuido Synergia. Administra cuentas y autenticación (local y OAuth), publicación de tareas, asignación de procesos (chunks) a workers, mecanismo de consenso/pagos y observabilidad (Prometheus).",
+    "version": "2.0.0"
   },
   "servers": [
     {
       "url": "http://localhost:8000",
       "description": "Servidor de desarrollo local"
-    },
-    {
-      "url": "https://api.synergia.dev",
-      "description": "Servidor de producción oficial"
     }
   ],
+  "tags": [
+    { "name": "Cuentas", "description": "Registro, consulta y verificación de cuentas locales" },
+    { "name": "Autenticación", "description": "Login local por credenciales y expedición de JWT" },
+    { "name": "OAuth", "description": "Login/registro mediante proveedores externos (Google, GitHub)" },
+    { "name": "Tareas", "description": "Publicación, consulta y gestión del ciclo de vida de tareas" },
+    { "name": "Procesos", "description": "Reserva y consulta de rangos (chunks) de trabajo dentro de una tarea" },
+    { "name": "Ejecuciones y resultados", "description": "Creación de ejecuciones, subida de resultados, consenso y confirmación" },
+    { "name": "Observabilidad", "description": "Métricas del cluster" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "TokenHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "token",
+        "description": "JWT de sesión, expedido por `/token`, `/auth/google/callback` o `/auth/github/callback`. Se envía como cabecera cruda `token: <jwt>` (no usa el esquema `Authorization: Bearer`)."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": "string", "example": "Tarea no encontrada" }
+        }
+      },
+      "UserCreateDTO": {
+        "type": "object",
+        "description": "Cuerpo para crear una cuenta local.",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 32,
+            "pattern": "^[a-zA-Z0-9_.-]{3,32}$",
+            "example": "cyberworker"
+          },
+          "passwd": {
+            "type": "string",
+            "minLength": 8,
+            "format": "password",
+            "example": "securePassword123"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Solo se aceptan dominios permitidos: gmail.com, outlook.com, hotmail.com, udc.es.",
+            "example": "worker@gmail.com"
+          }
+        },
+        "required": ["username", "passwd", "email"]
+      },
+      "UserDTO": {
+        "type": "object",
+        "description": "Cuerpo para iniciar sesión. Debe indicarse `username` o `email` (al menos uno).",
+        "properties": {
+          "username": { "type": "string", "nullable": true, "example": "cyberworker" },
+          "passwd": { "type": "string", "minLength": 8, "format": "password", "example": "securePassword123" },
+          "email": { "type": "string", "format": "email", "nullable": true, "example": "worker@gmail.com" }
+        },
+        "required": ["passwd"]
+      },
+      "Account": {
+        "type": "object",
+        "description": "Datos públicos de una cuenta (sin id interno ni email).",
+        "properties": {
+          "username": { "type": "string", "example": "cyberworker" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "reputation": { "type": "number", "format": "float", "example": 1.0 },
+          "balance": { "type": "number", "format": "float", "example": 87.5 }
+        }
+      },
+      "Transfer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "from_account_id": { "type": "integer", "nullable": true },
+          "from_user": { "type": "string", "nullable": true },
+          "to_account_id": { "type": "integer", "nullable": true },
+          "to_user": { "type": "string", "nullable": true },
+          "task_id": { "type": "integer", "nullable": true },
+          "process_id": { "type": "integer", "nullable": true },
+          "amount": { "type": "number", "format": "float" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TaskCreate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Renderizado Blender" },
+          "description": { "type": "string", "default": "", "example": "Render de la escena 4 del corto" },
+          "github_url": {
+            "type": "string",
+            "description": "URL del repositorio con el fichero de configuración de la tarea (leído con `load_config`).",
+            "example": "https://github.com/synergia/blender-task-4"
+          },
+          "repo_hash": { "type": "string", "description": "Hash del snapshot del repositorio en el momento de publicar.", "example": "a3f5c9d..." },
+          "repo_commit": { "type": "string", "example": "8f21abc" },
+          "resources": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lista separada por comas de recursos requeridos. Valores reconocidos: cpu, gpu, ram.",
+            "example": "cpu,gpu"
+          },
+          "requirements": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lista separada por comas de pares `clave=valor` (valor numérico), p.ej. requisitos mínimos por métrica.",
+            "example": "ram_gb=8,vram_gb=4"
+          }
+        },
+        "required": ["name", "github_url", "repo_hash", "repo_commit"]
+      },
+      "TaskUpdateDTO": {
+        "type": "object",
+        "properties": {
+          "repo_hash": { "type": "string", "description": "Nuevo hash del repositorio" },
+          "repo_commit": { "type": "string", "description": "Nuevo commit de referencia" }
+        },
+        "required": ["repo_hash", "repo_commit"]
+      },
+      "TaskInputDTO": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "description": "Lista de inputs a añadir a una tarea dinámica",
+            "example": ["frame_121.blend", "frame_122.blend"]
+          }
+        },
+        "required": ["items"]
+      },
+      "TaskSummary": {
+        "type": "object",
+        "properties": {
+          "task_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "github_url": { "type": "string" },
+          "status": { "type": "string", "enum": ["ACTIVE", "PAUSED", "CANCELLED", "SUCCESS", "COMPLETED", "—"] }
+        }
+      },
+      "TaskDetail": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "github_url": { "type": "string" },
+          "status": { "type": "string", "enum": ["ACTIVE", "PAUSED", "CANCELLED", "SUCCESS", "COMPLETED"] },
+          "publisher": { "type": "integer", "description": "id de la cuenta que publicó la tarea" },
+          "repo_snapshot_hash": { "type": "string" }
+        }
+      },
+      "TaskProgress": {
+        "type": "object",
+        "properties": {
+          "total_items": { "type": "integer", "example": 120 },
+          "is_dynamic": { "type": "boolean" },
+          "items_procesados": { "type": "integer", "description": "Suma de inputs cubiertos por procesos ya canonizados", "example": 42 }
+        }
+      },
+      "ProcessSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "input_start_index": { "type": "integer" },
+          "input_end_index": { "type": "integer" },
+          "canonical_execution_id": { "type": "integer", "nullable": true },
+          "execution_count": { "type": "integer", "description": "Nº de ejecuciones que coinciden con el resultado canónico" }
+        }
+      },
+      "ProcessByIndex": {
+        "type": "object",
+        "properties": {
+          "process_id": { "type": "integer" },
+          "input_start_index": { "type": "integer" },
+          "input_end_index": { "type": "integer" },
+          "canonical_execution_id": { "type": "integer", "nullable": true }
+        }
+      },
+      "ProcessDetail": {
+        "type": "object",
+        "properties": {
+          "input_start_index": { "type": "integer" },
+          "input_end_index": { "type": "integer" },
+          "canonical_execution_id": { "type": "integer", "nullable": true },
+          "repo_snapshot_hash": { "type": "string" },
+          "repo_commit": { "type": "string" }
+        }
+      },
+      "Execution": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "status": { "type": "string", "enum": ["PENDING", "SUCCESS", "FAILED"] },
+          "username": { "type": "string" },
+          "hash_sha256": { "type": "string", "nullable": true },
+          "result_file_id": { "type": "integer", "nullable": true },
+          "canonical_execution_id": { "type": "integer", "nullable": true },
+          "coincide": { "type": "integer", "description": "1 si el resultado coincide con el resultado canónico del proceso, 0 en caso contrario", "enum": [0, 1] }
+        }
+      },
+      "OutputFile": {
+        "type": "object",
+        "properties": {
+          "original_name": { "type": "string" },
+          "mime_type": { "type": "string" },
+          "size": { "type": "integer" },
+          "hash_sha256": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "account_id": { "type": "integer" },
+          "content": {
+            "type": "string",
+            "description": "Solo presente para .txt, .json o .log; contenido truncado a 200 caracteres (con '...' si se recorta).",
+            "nullable": true
+          }
+        }
+      },
+      "AuthTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+          "username": { "type": "string", "example": "cyberworker" },
+          "email": { "type": "string", "format": "email", "example": "worker@gmail.com" }
+        }
+      }
+    }
+  },
   "paths": {
     "/account": {
       "post": {
-        "summary": "Crear una nueva cuenta",
-        "description": "Crea una cuenta voluntaria u organizadora. Hashea la contraseña con Argon2id, inicializa el balance de bienvenida y envía un correo electrónico de confirmación.",
+        "tags": ["Cuentas"],
+        "summary": "Crear una nueva cuenta local",
+        "description": "Crea una cuenta con credenciales locales. Hashea la contraseña con Argon2id, otorga el balance de bienvenida (`INITIAL_CREDITS`) mediante una transferencia desde la cuenta sistema de mint, y envía un correo de verificación con un JWT de propósito `email_verification` válido 24h. La cuenta no puede iniciar sesión hasta verificar el email.",
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": { "type": "string", "example": "cyberworker" },
-                  "email": { "type": "string", "format": "email", "example": "worker@synergia.dev" },
-                  "password": { "type": "string", "example": "securePassword123" }
-                },
-                "required": ["username", "email", "password"]
-              }
-            }
+            "application/json": { "schema": { "$ref": "#/components/schemas/UserCreateDTO" } }
           }
         },
         "responses": {
-          "201": {
-            "description": "Cuenta creada con éxito",
+          "200": {
+            "description": "Cuenta creada; se ha enviado un correo de verificación",
             "content": {
               "application/json": {
+                "example": { "status": "Usuario creado correctamente" }
+              }
+            }
+          },
+          "400": {
+            "description": "El username o el email ya existen, o el email no pertenece a un dominio permitido",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": { "description": "Cuerpo de la petición inválido (validación de Pydantic)" }
+        }
+      }
+    },
+    "/account/{username}": {
+      "get": {
+        "tags": ["Cuentas"],
+        "summary": "Consultar una cuenta y su historial de transferencias",
+        "description": "Devuelve los datos públicos de la cuenta (sin id interno ni email) junto con su historial completo de transferencias entrantes y salientes.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Nombre de usuario de la cuenta"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cuenta encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": { "$ref": "#/components/schemas/Account" },
+                    "transfers": { "type": "array", "items": { "$ref": "#/components/schemas/Transfer" } }
+                  }
+                },
                 "example": {
-                  "status": "created",
-                  "username": "cyberworker",
-                  "initial_credits": 100.0,
-                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjeWJlcndvcmtlciJ9..."
+                  "account": { "username": "cyberworker", "created_at": "2026-01-15T10:00:00Z", "reputation": 1.0, "balance": 87.5 },
+                  "transfers": [
+                    { "id": 1, "from_account_id": 1, "from_user": "mint", "to_account_id": 42, "to_user": "cyberworker", "task_id": null, "process_id": null, "amount": 100.0, "created_at": "2026-01-15T10:00:00Z" }
+                  ]
                 }
               }
             }
+          },
+          "404": {
+            "description": "Cuenta no encontrada",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/verify-email": {
+      "get": {
+        "tags": ["Cuentas"],
+        "summary": "Verificar el email de una cuenta",
+        "description": "Valida el JWT de verificación (propósito `email_verification`) enviado por correo al crear la cuenta y marca el email como verificado.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "JWT de verificación recibido por email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email verificado correctamente",
+            "content": { "application/json": { "example": { "status": "Email verificado correctamente" } } }
+          },
+          "400": {
+            "description": "Token expirado, inválido, o de un propósito distinto a email_verification",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       }
     },
     "/token": {
       "post": {
-        "summary": "Iniciar sesión (JWT)",
-        "description": "Inicia sesión local por credenciales y expide un JSON Web Token (JWT) con 24 horas de validez para autenticar las llamadas de los workers o publishers.",
+        "tags": ["Autenticación"],
+        "summary": "Iniciar sesión local (JWT)",
+        "description": "Autentica por `username` o `email` + `passwd` y expide un JWT de sesión (`sub` = id de cuenta) con validez de 24h. Requiere que el email de la cuenta esté verificado.",
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": { "type": "string", "example": "cyberworker" },
-                  "password": { "type": "string", "example": "securePassword123" }
-                },
-                "required": ["username", "password"]
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserDTO" } } }
         },
         "responses": {
           "200": {
-            "description": "Token expedido correctamente",
-            "content": {
-              "application/json": {
-                "example": {
-                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjeWJlcndvcmtlciIsImV4cCI6MTcxOTk...",
-                  "expires_in": 86400
-                }
-              }
-            }
+            "description": "Login correcto",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthTokenResponse" } } }
+          },
+          "400": { "description": "No se indicó username ni email" },
+          "401": {
+            "description": "Credenciales incorrectas o email sin verificar",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/auth/google": {
+      "get": {
+        "tags": ["OAuth"],
+        "summary": "Iniciar login con Google",
+        "description": "Genera un `state` anti-CSRF (guardado en caché con TTL de 5 minutos) y devuelve la URL de autorización de Google OAuth2 a la que redirigir al usuario.",
+        "responses": {
+          "200": {
+            "description": "URL de autorización de Google",
+            "content": { "application/json": { "example": { "url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=...&response_type=code&scope=openid+email+profile&state=..." } } }
+          }
+        }
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "tags": ["OAuth"],
+        "summary": "Callback de Google OAuth",
+        "description": "Intercambia el `code` por un access token, obtiene el perfil del usuario y crea la cuenta (con 500000000000 créditos iniciales) si es la primera vez que inicia sesión, o vincula el proveedor si la cuenta ya existe por email. Devuelve un JWT de sesión igual que `/token`.",
+        "parameters": [
+          { "name": "code", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "state", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Debe coincidir con el `state` emitido por /auth/google" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login/registro correcto",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthTokenResponse" } } }
+          },
+          "400": {
+            "description": "Estado OAuth inválido o expirado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/auth/github": {
+      "get": {
+        "tags": ["OAuth"],
+        "summary": "Iniciar login con GitHub",
+        "description": "Genera un `state` anti-CSRF y devuelve la URL de autorización de GitHub OAuth a la que redirigir al usuario.",
+        "responses": {
+          "200": {
+            "description": "URL de autorización de GitHub",
+            "content": { "application/json": { "example": { "url": "https://github.com/login/oauth/authorize?client_id=...&redirect_uri=...&scope=user%3Aemail&state=..." } } }
+          }
+        }
+      }
+    },
+    "/auth/github/callback": {
+      "get": {
+        "tags": ["OAuth"],
+        "summary": "Callback de GitHub OAuth",
+        "description": "Intercambia el `code` por un access token, obtiene el perfil y el email primario del usuario (necesario porque GitHub puede no exponerlo públicamente), y crea la cuenta o vincula el proveedor. Devuelve un JWT de sesión igual que `/token`.",
+        "parameters": [
+          { "name": "code", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "state", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login/registro correcto",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthTokenResponse" } } }
+          },
+          "400": {
+            "description": "Estado OAuth inválido, o GitHub no devolvió un email primario",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       }
     },
     "/task": {
       "get": {
-        "summary": "Listar tareas disponibles",
-        "description": "Retorna la lista de todas las tareas activas y pausadas disponibles en la red.",
+        "tags": ["Tareas"],
+        "summary": "Listar tareas",
+        "description": "Sin cabecera `token`: devuelve todas las tareas de la red. Con `token`: si `subscribed=true` devuelve las tareas a las que el usuario está suscrito (como worker); si no, devuelve las tareas publicadas por el propio usuario.",
         "parameters": [
           {
             "name": "subscribed",
             "in": "query",
             "required": false,
-            "schema": { "type": "boolean" },
-            "description": "Filtrar únicamente por tareas a las que tu nodo está suscrito"
+            "schema": { "type": "boolean", "default": false },
+            "description": "Solo tiene efecto si se envía `token`. Filtra por tareas a las que el usuario está suscrito."
+          },
+          {
+            "name": "token",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "JWT de sesión opcional; cambia el alcance del listado"
           }
         ],
         "responses": {
@@ -105,58 +454,361 @@
             "description": "Listado de tareas",
             "content": {
               "application/json": {
-                "example": [
-                  {
-                    "id": "task-889a-4c22-b2df",
-                    "title": "Renderizado 3D de Blender - Escena 4",
-                    "repo_url": "https://github.com/synergia/blender-task-4",
-                    "status": "ACTIVE",
-                    "total_chunks": 120,
-                    "completed_chunks": 42
-                  }
-                ]
+                "schema": { "type": "object", "properties": { "result": { "type": "array", "items": { "$ref": "#/components/schemas/TaskSummary" } } } },
+                "example": {
+                  "result": [
+                    { "task_id": 12, "name": "Renderizado Blender", "description": "Render de la escena 4", "github_url": "https://github.com/synergia/blender-task-4", "status": "ACTIVE" }
+                  ]
+                }
               }
             }
-          }
+          },
+          "401": { "description": "Token inválido", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       },
       "post": {
+        "tags": ["Tareas"],
         "summary": "Publicar una nueva tarea",
-        "description": "Crea una tarea en la red descontando el coste de publicación. Inicializa la cola RabbitMQ para la distribución de chunks.",
+        "description": "Lee y valida la configuración del repositorio indicado en `github_url` (`load_config`/`cfg()`), descuenta `TASK_COST` créditos del publicador mediante una transferencia a la cuenta sistema de fees, crea la tarea en BBDD, registra los recursos/requisitos indicados y publica los chunks iniciales en la cola RabbitMQ dedicada a la tarea.",
+        "security": [{ "TokenHeader": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TaskCreate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Tarea creada",
+            "content": { "application/json": { "example": { "task_id": 12 } } }
+          },
+          "400": {
+            "description": "La configuración del repositorio (fichero de config leído por load_config) es errónea o está incompleta",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "401": { "description": "Token inválido, expirado, o la cuenta no existe", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Créditos insuficientes para cubrir TASK_COST", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}": {
+      "get": {
+        "tags": ["Tareas"],
+        "summary": "Obtener una tarea por id",
         "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tarea encontrada",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TaskDetail" } } }
+          },
+          "404": { "description": "Tarea no encontrada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "patch": {
+        "tags": ["Tareas"],
+        "summary": "Sincronizar el hash/commit del repositorio de una tarea",
+        "description": "Solo el publisher de la tarea puede actualizar el hash y commit de referencia del repositorio (usado para detectar manipulaciones al crear procesos).",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TaskUpdateDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Hash/commit actualizados",
+            "content": { "application/json": { "example": { "task_id": "12", "repo_hash": "a3f5c9d...", "repo_commit": "8f21abc" } } }
+          },
+          "403": { "description": "El usuario no es el publisher de la tarea", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Tarea no encontrada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/status": {
+      "patch": {
+        "tags": ["Tareas"],
+        "summary": "Cambiar el estado de una tarea",
+        "description": "Solo el publisher puede cambiar el estado. Reglas: una tarea CANCELLED no puede cambiar de estado; solo tareas dinámicas pueden marcarse COMPLETED manualmente; para reactivar a ACTIVE el balance del publisher debe cubrir el coste medio estimado por item. Al pasar a CANCELLED o COMPLETED se elimina la cola RabbitMQ de la tarea.",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } },
           {
-            "name": "token",
-            "in": "header",
+            "name": "status",
+            "in": "query",
             "required": true,
-            "schema": { "type": "string" },
-            "description": "Token JWT de sesión"
+            "schema": { "type": "string", "enum": ["ACTIVE", "PAUSED", "CANCELLED", "COMPLETED"] }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado actualizado",
+            "content": { "application/json": { "example": { "task_id": "12", "status": "PAUSED" } } }
+          },
+          "400": {
+            "description": "Status inválido, tarea cancelada, cierre manual no permitido en tarea no dinámica, o saldo insuficiente para reactivar",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": { "description": "Tarea no encontrada o el usuario no es su publisher", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/subscription": {
+      "delete": {
+        "tags": ["Tareas"],
+        "summary": "Cancelar la suscripción a una tarea",
+        "description": "Elimina la suscripción del worker autenticado a la tarea (la suscripción se crea implícitamente al reservar un proceso con POST /task/{task_id}/process).",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Suscripción eliminada", "content": { "application/json": { "example": { "status": "ok" } } } },
+          "404": { "description": "El usuario no estaba suscrito a la tarea", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/input": {
+      "post": {
+        "tags": ["Tareas"],
+        "summary": "Añadir inputs a una tarea dinámica",
+        "description": "Solo el publisher puede añadir inputs, y solo a tareas dinámicas y ACTIVE. Los nuevos inputs se indexan a continuación de los ya existentes y se publican en la cola RabbitMQ de la tarea.",
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "token", "in": "header", "required": true, "schema": { "type": "string" }, "description": "JWT de sesión del publisher" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TaskInputDTO" } } }
+        },
+        "responses": {
+          "200": { "description": "Inputs añadidos", "content": { "application/json": { "example": { "added": 2 } } } },
+          "400": {
+            "description": "La tarea no es dinámica, no está ACTIVE, o hubo un error de validación",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "403": { "description": "El usuario no es el publisher de la tarea", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Tarea no encontrada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/progress": {
+      "get": {
+        "tags": ["Tareas"],
+        "summary": "Consultar el progreso de una tarea",
+        "description": "Devuelve el total de inputs de la tarea y cuántos ya están cubiertos por un proceso con resultado canónico asignado.",
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progreso de la tarea",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TaskProgress" }, "example": { "total_items": 120, "is_dynamic": false, "items_procesados": 42 } } }
+          },
+          "404": { "description": "Tarea no encontrada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/process": {
+      "post": {
+        "tags": ["Procesos"],
+        "summary": "Reservar un proceso (chunk) y su primera ejecución",
+        "description": "Un worker reclama un rango de inputs de la tarea (`index`/`count`, o un `value` puntual para tareas dinámicas). Verifica que el rango no solapa con otro proceso, que el repo_hash/repo_commit del worker coinciden con los de la tarea (si no, se asume el repo alterado), suscribe al worker a la tarea y crea el proceso junto con su primera ejecución en estado PENDING.",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "repo_hash", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Hash del repo tal como lo ve el worker; debe coincidir con el registrado en la tarea" },
+          { "name": "repo_commit", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "index", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Índice de inicio del rango a reservar" },
+          { "name": "count", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Nº de inputs consecutivos a reservar a partir de index" },
+          { "name": "value", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Valor puntual de input (uso típico en tareas dinámicas)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proceso y ejecución creados",
+            "content": { "application/json": { "example": { "process_id": 501, "execution_id": 900 } } }
+          },
+          "400": { "description": "Rango inválido (índice o count negativos)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Tarea no encontrada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": {
+            "description": "Rango solapado con otro proceso existente, ficheros de la tarea alterados (repo_hash/repo_commit no coinciden), o ya existe una ejecución de este worker en el proceso",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Procesos"],
+        "summary": "Listar procesos de una tarea, o buscar el que contiene un índice",
+        "description": "Sin `index`: devuelve todos los procesos de la tarea. Con `index`: devuelve el único proceso cuyo rango [input_start_index, input_end_index] contiene ese índice.",
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "index", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Índice perteneciente al proceso buscado" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proceso encontrado (con index) o listado completo (sin index)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/ProcessByIndex" },
+                    { "type": "object", "properties": { "result": { "type": "array", "items": { "$ref": "#/components/schemas/ProcessSummary" } } } }
+                  ]
+                },
+                "examples": {
+                  "por_indice": { "value": { "process_id": 501, "input_start_index": 10, "input_end_index": 19, "canonical_execution_id": 900 } },
+                  "listado": { "value": { "result": [ { "id": 501, "input_start_index": 10, "input_end_index": 19, "canonical_execution_id": 900, "execution_count": 3 } ] } }
+                }
+              }
+            }
+          },
+          "404": { "description": "No se encontró un proceso que contenga ese índice", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/process/{process_id}": {
+      "get": {
+        "tags": ["Procesos"],
+        "summary": "Consultar un proceso concreto",
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "process_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proceso encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "result": { "type": "array", "items": { "$ref": "#/components/schemas/ProcessDetail" }, "minItems": 1, "maxItems": 1 } } },
+                "example": { "result": [ { "input_start_index": 10, "input_end_index": 19, "canonical_execution_id": 900, "repo_snapshot_hash": "a3f5c9d...", "repo_commit": "8f21abc" } ] }
+              }
+            }
+          },
+          "404": { "description": "Proceso no encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/process/{process_id}/executions": {
+      "get": {
+        "tags": ["Ejecuciones y resultados"],
+        "summary": "Listar las ejecuciones de un proceso",
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "process_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proceso y sus ejecuciones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "process": { "type": "object", "properties": { "input_start_index": { "type": "integer" }, "input_end_index": { "type": "integer" }, "canonical_execution_id": { "type": "integer", "nullable": true } } },
+                    "executions": { "type": "array", "items": { "$ref": "#/components/schemas/Execution" } }
+                  }
+                },
+                "example": {
+                  "process": { "input_start_index": 10, "input_end_index": 19, "canonical_execution_id": 900 },
+                  "executions": [ { "id": 900, "status": "SUCCESS", "username": "cyberworker", "hash_sha256": "9f86d0...", "result_file_id": 55, "canonical_execution_id": 900, "coincide": 1 } ]
+                }
+              }
+            }
+          },
+          "404": { "description": "Proceso no encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/process/{process_id}/execution": {
+      "post": {
+        "tags": ["Ejecuciones y resultados"],
+        "summary": "Crear una ejecución adicional sobre un proceso existente",
+        "description": "Permite a otro worker declarar que va a ejecutar (o confirmar) un proceso ya existente. En tareas no deterministas, si ya hay una ejecución para el proceso se rechaza (solo se admite un ejecutor). En cualquier caso, un mismo worker no puede tener dos ejecuciones sobre el mismo proceso. Si la tarea no está ACTIVE, responde 200 con un mensaje de error en el cuerpo en lugar de crear la ejecución.",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "process_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ejecución creada, o mensaje indicando que la tarea no está activa",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "creada": { "value": { "execution_id": 901 } },
+                  "tarea_inactiva": { "value": { "error": "La tarea no está activa en estos momentos" } }
+                }
+              }
+            }
+          },
+          "404": { "description": "Tarea no encontrada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": {
+            "description": "Tarea no determinista ya procesada por otro nodo, o ya existe una ejecución de este worker en el proceso",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/task/{task_id}/process/{process_id}/execution/{execution_id}/result": {
+      "post": {
+        "tags": ["Ejecuciones y resultados"],
+        "summary": "Subir el resultado de una ejecución",
+        "description": "Sube el fichero de resultado (guardado en disco con sharding por los 2 primeros caracteres de su hash SHA-256) y las métricas de consumo del worker. Calcula el coste en créditos (CPU + RAM + GPU) y ejecuta el pago: en tareas no deterministas se paga directamente al worker; en tareas deterministas se recalcula el resultado canónico por consenso y se reparten pagos/devoluciones y recompensas de confirmación entre los workers implicados, actualizando además su reputación. También actualiza la media/desviación de coste por item de la tarea; si el balance del publisher no cubre el coste estimado del siguiente chunk, se pausan todas sus tareas. Si la tarea no es dinámica y ya se cubrieron todos sus inputs, la tarea pasa a COMPLETED y se elimina su cola RabbitMQ. **Nota**: si la subida se completa con éxito la función no retorna explícitamente un cuerpo (respuesta `null`); solo se devuelve un cuerpo JSON explícito cuando la tarea no está activa.",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "process_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "execution_id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "title": { "type": "string", "example": "Renderizado Blender" },
-                  "repo_url": { "type": "string", "example": "https://github.com/synergia/blender-task-4" },
-                  "config_toml": { "type": "string", "example": "[task]\ntotal_chunks = 120" }
+                  "cpu_cycles": { "type": "integer", "description": "Ciclos de CPU consumidos (se usa 1 como mínimo si es <= 0)", "example": 1500000000 },
+                  "ram_avg": { "type": "number", "format": "float", "description": "RAM media consumida, en bytes", "example": 536870912 },
+                  "vram_avg": { "type": "number", "format": "float", "default": 0, "description": "VRAM media consumida, en MB" },
+                  "tdp_w": { "type": "number", "format": "float", "default": 0, "description": "Potencia media de la GPU, en vatios" },
+                  "file": { "type": "string", "format": "binary", "description": "Fichero de resultado" }
                 },
-                "required": ["title", "repo_url"]
+                "required": ["cpu_cycles", "ram_avg", "file"]
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Tarea creada con éxito",
+          "200": {
+            "description": "Resultado procesado y pagado. Sin cuerpo (null) en el caso de éxito; con `{\"status\": ...}` en minúsculas si la tarea no está activa y el que sube no es el publisher.",
+            "content": { "application/json": { "example": { "status": "paused" } } }
+          },
+          "404": {
+            "description": "Tarea, proceso o ejecución PENDING de este worker no encontrados",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "413": { "description": "El fichero excede MAX_UPLOAD_BYTES", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/task/{task_id}/confirm": {
+      "get": {
+        "tags": ["Ejecuciones y resultados"],
+        "summary": "Obtener el próximo proceso pendiente de confirmar",
+        "description": "Devuelve un proceso ya resuelto que el worker autenticado aún no ha confirmado (verificado que su copia coincide con el resultado canónico), para que pueda ejecutarlo y confirmarlo vía POST .../execution.",
+        "security": [{ "TokenHeader": [] }],
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proceso a confirmar, o indicación de que no hay nada pendiente",
             "content": {
               "application/json": {
-                "example": {
-                  "id": "task-889a-4c22-b2df",
-                  "status": "ACTIVE",
-                  "cost": 15.00
+                "examples": {
+                  "pendiente": { "value": { "process_id": 501 } },
+                  "nada": { "value": { "status": "nothing_to_verify" } }
                 }
               }
             }
@@ -164,67 +816,45 @@
         }
       }
     },
-    "/task/{id}/process": {
-      "post": {
-        "summary": "Declarar inicio de procesamiento de un chunk",
-        "description": "El worker declara que comenzará a ejecutar un bloque de trabajo específico para reclamar los derechos de procesamiento exclusivos de ese rango.",
+    "/task/{task_id}/output": {
+      "get": {
+        "tags": ["Ejecuciones y resultados"],
+        "summary": "Obtener las salidas (resultados) de una tarea",
+        "description": "Sin `download`: devuelve metadatos de los ficheros de resultado (con una vista previa de hasta 200 caracteres para .txt/.json/.log). Con `download=true`: devuelve un .zip con todos los ficheros de resultado que cumplen el filtro.",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" },
-            "description": "ID único de la tarea"
-          },
-          {
-            "name": "token",
-            "in": "header",
-            "required": true,
-            "schema": { "type": "string" },
-            "description": "Token JWT del worker"
-          }
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "download", "in": "query", "required": false, "schema": { "type": "boolean", "default": false } },
+          { "name": "process_id", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filtrar por un proceso concreto" },
+          { "name": "canonical_only", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Devolver únicamente los resultados canónicos" }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "start_index": { "type": "integer", "example": 10 },
-                  "end_index": { "type": "integer", "example": 20 }
-                },
-                "required": ["start_index", "end_index"]
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Procesamiento registrado correctamente",
+            "description": "Metadatos de las salidas (JSON) o archivo .zip (binario, cuando download=true)",
             "content": {
               "application/json": {
-                "example": {
-                  "process_id": "proc-41fa-8a12",
-                  "status": "PENDING",
-                  "deadline": "2026-08-28T18:30:00Z"
-                }
+                "schema": { "type": "object", "properties": { "result": { "type": "array", "items": { "$ref": "#/components/schemas/OutputFile" } } } },
+                "example": { "result": [ { "original_name": "frame_010.png", "mime_type": "image/png", "size": 204800, "hash_sha256": "9f86d0...", "created_at": "2026-02-01T12:00:00Z", "account_id": 42 } ] }
+              },
+              "application/zip": {
+                "schema": { "type": "string", "format": "binary" }
               }
             }
-          }
+          },
+          "404": { "description": "No hay archivos para esta tarea (o falta un fichero esperado al generar el zip)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/metrics": {
       "get": {
+        "tags": ["Observabilidad"],
         "summary": "Métricas Prometheus",
-        "description": "Retorna métricas operativas detalladas del cluster en formato de texto compatible con Prometheus scraper.",
+        "description": "Expone en formato texto de Prometheus las métricas del cluster: workers activos por tarea, executions creadas/completadas, créditos pagados por tipo, tamaño de ficheros subidos, latencia de endpoints y estado de cada tarea.",
         "responses": {
           "200": {
-            "description": "Métricas de Prometheus exitosas",
+            "description": "Métricas en formato Prometheus",
             "content": {
               "text/plain": {
-                "example": "synergia_active_workers 142\nsynergia_tasks_total 12\nsynergia_credits_distributed_total 8540.22"
+                "example": "p2pcn_active_workers{task_id=\"12\"} 3\np2pcn_task_status{task_id=\"12\"} 1\np2pcn_executions_completed_total{task_id=\"12\",result=\"success\"} 42\np2pcn_payments_total_amount{type=\"canonical\"} 128.54"
               }
             }
           }
