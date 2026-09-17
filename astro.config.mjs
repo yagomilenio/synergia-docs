@@ -37,6 +37,17 @@ export default defineConfig({
     starlight({
       title: 'Synergia Docs',
       favicon: '/logo-small.jpg',
+      defaultLocale: 'root',
+      locales: {
+        root: {
+          label: 'Español',
+          lang: 'es',
+        },
+        en: {
+          label: 'English',
+          lang: 'en',
+        },
+      },
       head: [
         {
           tag: 'script',
