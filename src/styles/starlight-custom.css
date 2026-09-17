@@ -468,3 +468,58 @@ aside.danger .title {
 :root[data-theme="light"] .math-formula-box {
   color: var(--sl-color-accent-high) !important;
 }
+
+/* =========================================================
+   Image Lightbox Overlay for Click-to-Zoom
+   ========================================================= */
+article img, main img {
+  cursor: zoom-in;
+  transition: opacity 150ms ease;
+}
+
+article img:hover, main img:hover {
+  opacity: 0.9;
+}
+
+.sl-lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(13, 13, 13, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease, visibility 200ms ease;
+  cursor: zoom-out;
+}
+
+.sl-lightbox-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sl-lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  transform: scale(0.95);
+  transition: transform 200ms ease;
+  border: 1px solid #26262B;
+}
+
+:root[data-theme="light"] .sl-lightbox-overlay {
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+:root[data-theme="light"] .sl-lightbox-img {
+  border-color: #E4E3DF;
+}
+
+.sl-lightbox-overlay.active .sl-lightbox-img {
+  transform: scale(1);
+}

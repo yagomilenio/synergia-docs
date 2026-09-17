@@ -180,6 +180,62 @@ export default defineConfig({
           `
         },
         {
+          tag: 'script',
+          content: `
+            function initImageLightbox() {
+              let overlay = document.querySelector('.sl-lightbox-overlay');
+              if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'sl-lightbox-overlay';
+
+                const img = document.createElement('img');
+                img.className = 'sl-lightbox-img';
+                img.alt = 'Zoomed image';
+
+                overlay.appendChild(img);
+                document.body.appendChild(overlay);
+
+                overlay.addEventListener('click', () => {
+                  overlay.classList.remove('active');
+                });
+
+                window.addEventListener('keydown', (e) => {
+                  if (e.key === 'Escape') {
+                    overlay.classList.remove('active');
+                  }
+                });
+              }
+
+              const lightboxImg = overlay.querySelector('.sl-lightbox-img');
+
+              document.querySelectorAll('main img, article img').forEach(img => {
+                if (img.closest('.site-title') || img.closest('.brand') || img.closest('.logo') || img.closest('.social-icons') || img.classList.contains('sl-lightbox-img')) {
+                  return;
+                }
+
+                img.style.cursor = 'zoom-in';
+
+                if (!img.dataset.hasLightbox) {
+                  img.dataset.hasLightbox = 'true';
+                  img.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    lightboxImg.src = img.src;
+                    lightboxImg.alt = img.alt || 'Zoomed image';
+                    overlay.classList.add('active');
+                  });
+                }
+              });
+            }
+
+            if (document.readyState === 'loading') {
+              window.addEventListener('DOMContentLoaded', initImageLightbox);
+            } else {
+              initImageLightbox();
+            }
+            window.addEventListener('astro:page-load', initImageLightbox);
+          `
+        },
+        {
           tag: 'link',
           attrs: {
             rel: 'stylesheet',
