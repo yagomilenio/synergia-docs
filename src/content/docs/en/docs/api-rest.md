@@ -10,7 +10,7 @@ The Synergia REST API orchestrates all business operations within the ecosystem.
     <strong>Swagger UI Documentation</strong>
     <p>Explore all endpoints of the Synergia protocol interactively and in detail in Swagger UI.</p>
   </div>
-  <a href="../../swagger.html" class="openapi-download-btn">OPEN SWAGGER PLAYGROUND</a>
+  <a href="/synergia-docs/swagger.html" class="openapi-download-btn">OPEN SWAGGER PLAYGROUND</a>
 </div>
 
 ---
