@@ -247,6 +247,24 @@ export default defineConfig({
           `
         },
         {
+          tag: 'script',
+          content: `
+            function updateSiteLogoLink() {
+              const siteTitleLink = document.querySelector('a.site-title');
+              if (siteTitleLink) {
+                siteTitleLink.setAttribute('href', 'https://yagomilenio.github.io/synergia-landing');
+              }
+            }
+
+            if (document.readyState === 'loading') {
+              window.addEventListener('DOMContentLoaded', updateSiteLogoLink);
+            } else {
+              updateSiteLogoLink();
+            }
+            window.addEventListener('astro:page-load', updateSiteLogoLink);
+          `
+        },
+        {
           tag: 'link',
           attrs: {
             rel: 'stylesheet',
