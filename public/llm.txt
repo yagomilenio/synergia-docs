@@ -1,0 +1,83 @@
+# Synergia Docs
+
+> Documentación técnica oficial de Synergia, una plataforma de cómputo distribuido voluntario y centralizado. Cualquier usuario publica tareas costosas como repositorios de GitHub y una red de nodos voluntarios (workers) las procesa en contenedores Docker aislados, con resultados verificados por consenso. Los workers ganan créditos internos proporcionales al coste real de cómputo y los usan para publicar sus propias tareas. / Official technical documentation for Synergia, a voluntary, centralized distributed computing platform with cross-verified results and an internal credit economy.
+
+Notas clave para entender el proyecto:
+
+- Tres roles: publicador (publica la tarea apuntando a un repositorio público de GitHub), worker (ejecuta bloques de trabajo localmente en Docker) y servidor (orquesta colas, verifica resultados y lleva el libro de créditos).
+- Las tareas son agnósticas al lenguaje: se empaquetan con un `Makefile` (contrato `setup`/`run`/`clean`) y un manifiesto `config.toml`.
+- Stack del backend: FastAPI (API REST en el puerto 8000 y API WebSocket en el 8001), RabbitMQ, Oracle Database Free con Blockchain Tables y Prometheus/Grafana.
+- Cliente: paquete Python `synergia` (PyPI), comando `synergia`; requiere Python >= 3.10, Docker y `perf`.
+- Código: servidor https://github.com/yagomilenio/synergia-server y cliente https://github.com/yagomilenio/synergia-client (licencia GPL-3.0).
+- La documentación está disponible en español (raíz) y en inglés (prefijo `/en/`).
+- Especificación OpenAPI de la API REST: https://yagomilenio.github.io/synergia-docs/openapi.json
+
+## Visión General
+
+- [Introducción a Synergia](https://yagomilenio.github.io/synergia-docs/docs/introduccion/): Qué es Synergia: red de cómputo distribuido voluntario con verificación e incentivos económicos; roles de publicador, worker y servidor.
+- [¿Por qué Synergia?](https://yagomilenio.github.io/synergia-docs/docs/por-que-synergia/): Comparativa frente a BOINC, Folding@Home, SETI, Golem Network, MPI, Hadoop, Spark y sistemas de CI.
+- [Primeros Pasos](https://yagomilenio.github.io/synergia-docs/docs/primeros-pasos/): Despliega el servidor con Docker Compose y conecta un nodo cliente en menos de 5 minutos.
+- [Configuración del Servidor](https://yagomilenio.github.io/synergia-docs/docs/configuracion-servidor/): Variables de entorno, servicios de docker-compose, puertos y troubleshooting del backend.
+- [Configuración del Cliente](https://yagomilenio.github.io/synergia-docs/docs/configuracion-cliente/): Requisitos (Python >= 3.10, Docker, perf), ficheros de configuración local y estructura del proyecto.
+- [Caso de Uso Completo](https://yagomilenio.github.io/synergia-docs/docs/caso-de-uso/): Flujo de principio a fin: un publicador lanza una tarea, un worker la procesa y cobra créditos.
+
+## Arquitectura y Flujo
+
+- [Arquitectura del Sistema](https://yagomilenio.github.io/synergia-docs/docs/arquitectura/): API REST (FastAPI), API WebSocket, RabbitMQ, Oracle DB y decisiones tecnológicas.
+- [Patrones de Diseño](https://yagomilenio.github.io/synergia-docs/docs/patrones-de-diseno/): Productor-consumidor, fachada, singleton, estrategia y decisiones de diseño del proyecto.
+- [Flujo de Tareas](https://yagomilenio.github.io/synergia-docs/docs/flujo-de-tareas/): Ciclo de vida: publicación, segmentación, distribución, ejecución local y verificación con liquidación.
+- [Internals del Worker](https://yagomilenio.github.io/synergia-docs/docs/worker-aislamiento/): Sandboxing con Docker, wrappers en C, políticas de red con iptables y medición de rendimiento.
+
+## Especificaciones
+
+- [Modelo Económico y Reputación](https://yagomilenio.github.io/synergia-docs/docs/modelo-economico/): Créditos, fórmulas de coste (CPU, RAM, GPU), consenso de liquidación y reputación ponderada.
+- [Modelo de Datos](https://yagomilenio.github.io/synergia-docs/docs/modelo-de-datos/): Esquema relacional en Oracle y ledger inmutable con Blockchain Tables.
+- [Seguridad y Autenticación](https://yagomilenio.github.io/synergia-docs/docs/seguridad/): Argon2, JWT, OAuth2, gestión de sesiones y modelo de confianza cero frente al código de las tareas.
+
+## Referencias Técnicas
+
+- [Referencia de config.toml](https://yagomilenio.github.io/synergia-docs/docs/config-toml/): Manifiesto de la tarea: requisitos de hardware, particionado de entradas, red y validación.
+- [Contrato del Makefile](https://yagomilenio.github.io/synergia-docs/docs/contrato-makefile/): Interfaz de ejecución agnóstica al lenguaje basada en GNU Make (objetivos setup, run, clean).
+- [Referencia del CLI](https://yagomilenio.github.io/synergia-docs/docs/cli/): Los 23 comandos del cliente de línea de comandos `synergia`.
+- [API REST](https://yagomilenio.github.io/synergia-docs/docs/api-rest/): Los 25 endpoints HTTP: métodos, autenticación y flujos.
+- [Protocolo WebSocket](https://yagomilenio.github.io/synergia-docs/docs/api-websocket/): Asignación y consumo de bloques de trabajo en tiempo real.
+- [Métricas Prometheus](https://yagomilenio.github.io/synergia-docs/docs/metricas/): Catálogo de métricas y configuración de Grafana.
+
+## Ejemplos y Recursos
+
+- [Tareas de Ejemplo](https://yagomilenio.github.io/synergia-docs/docs/tareas-ejemplo/): Repositorios demostrativos: criptografía, biomedicina, renderizado 3D e inferencia de LLM/visión.
+- [Glosario](https://yagomilenio.github.io/synergia-docs/docs/glosario/): Tarea, entrada, bloque, proceso, resultado canónico, crédito y reputación.
+- [Roadmap](https://yagomilenio.github.io/synergia-docs/docs/roadmap/): Trabajo futuro ordenado por impacto esperado.
+
+## English documentation
+
+- [Documentation home](https://yagomilenio.github.io/synergia-docs/en/docs/): Entry point of the English documentation, organized by overview, architecture, specifications and technical references.
+- [Introduction to Synergia](https://yagomilenio.github.io/synergia-docs/en/docs/introduccion/)
+- [Why Synergia?](https://yagomilenio.github.io/synergia-docs/en/docs/por-que-synergia/)
+- [Getting Started](https://yagomilenio.github.io/synergia-docs/en/docs/primeros-pasos/)
+- [Server Configuration](https://yagomilenio.github.io/synergia-docs/en/docs/configuracion-servidor/)
+- [Client Configuration](https://yagomilenio.github.io/synergia-docs/en/docs/configuracion-cliente/)
+- [Complete Case Study](https://yagomilenio.github.io/synergia-docs/en/docs/caso-de-uso/)
+- [System Architecture](https://yagomilenio.github.io/synergia-docs/en/docs/arquitectura/)
+- [Design Patterns](https://yagomilenio.github.io/synergia-docs/en/docs/patrones-de-diseno/)
+- [Complete Task Flow](https://yagomilenio.github.io/synergia-docs/en/docs/flujo-de-tareas/)
+- [Worker Internals and Isolation](https://yagomilenio.github.io/synergia-docs/en/docs/worker-aislamiento/)
+- [Economic Model and Reputation](https://yagomilenio.github.io/synergia-docs/en/docs/modelo-economico/)
+- [Data Model (Oracle)](https://yagomilenio.github.io/synergia-docs/en/docs/modelo-de-datos/)
+- [Security and Authentication](https://yagomilenio.github.io/synergia-docs/en/docs/seguridad/)
+- [config.toml Reference](https://yagomilenio.github.io/synergia-docs/en/docs/config-toml/)
+- [Makefile Contract](https://yagomilenio.github.io/synergia-docs/en/docs/contrato-makefile/)
+- [CLI Reference](https://yagomilenio.github.io/synergia-docs/en/docs/cli/)
+- [REST API Reference](https://yagomilenio.github.io/synergia-docs/en/docs/api-rest/)
+- [WebSocket Protocol](https://yagomilenio.github.io/synergia-docs/en/docs/api-websocket/)
+- [Monitoring and Metrics (Prometheus)](https://yagomilenio.github.io/synergia-docs/en/docs/metricas/)
+- [Published Example Tasks](https://yagomilenio.github.io/synergia-docs/en/docs/tareas-ejemplo/)
+- [Glossary](https://yagomilenio.github.io/synergia-docs/en/docs/glosario/)
+- [Roadmap](https://yagomilenio.github.io/synergia-docs/en/docs/roadmap/)
+
+## Optional
+
+- [Índice de la documentación (ES)](https://yagomilenio.github.io/synergia-docs/docs/): Portada con la estructura completa.
+- [Swagger UI](https://yagomilenio.github.io/synergia-docs/swagger.html): Explorador interactivo de la API REST.
+- [Landing de Synergia](https://yagomilenio.github.io/synergia-landing): Sitio de presentación del proyecto.
+- [Sitemap](https://yagomilenio.github.io/synergia-docs/sitemap.xml): Mapa del sitio con alternativas hreflang es/en.

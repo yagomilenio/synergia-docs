@@ -336,6 +336,9 @@ export default defineConfig({
       customCss: [
         './src/styles/starlight-custom.css',
       ],
+      components: {
+	Head: './src/components/Head.astro',
+      },
     }),
   ],
 });
