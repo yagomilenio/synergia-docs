@@ -1,0 +1,146 @@
+---
+/**
+ * src/components/Head.astro
+ *
+ * Override del componente <Head> de Starlight. Mantiene todo el <head> por
+ * defecto y le añade JSON-LD (schema.org) en cada página:
+ *   - WebSite
+ *   - SoftwareApplication (Synergia)
+ *   - TechArticle (la página actual)
+ *   - BreadcrumbList (Documentación > Sección > Página)
+ */
+import Default from '@astrojs/starlight/components/Head.astro';
+
+const ORIGIN = 'https://yagomilenio.github.io';
+const BASE = '/synergia-docs';
+const SITE_URL = `${ORIGIN}${BASE}/`;
+const LANDING_URL = 'https://yagomilenio.github.io/synergia-landing';
+const AUTHOR_NAME = 'Yago Manuel Sánchez Moscoso';
+const AUTHOR_URL = 'https://github.com/yagomilenio';
+const LICENSE_URL = 'https://www.gnu.org/licenses/gpl-3.0.html';
+
+const SOFTWARE_ID = `${SITE_URL}#software`;
+const WEBSITE_ID = `${SITE_URL}#website`;
+const AUTHOR_ID = `${SITE_URL}#author`;
+
+// slug -> índice de sección (mismo orden que el sidebar de astro.config.mjs)
+const SECTIONS = {
+  es: ['Visión General', 'Arquitectura y Flujo', 'Especificaciones', 'Referencias Técnicas', 'Tareas de Ejemplo', 'Recursos'],
+  en: ['Overview', 'Architecture & Flow', 'Specifications', 'Technical References', 'Example Tasks', 'Resources'],
+};
+const SLUG_SECTION: Record<string, number> = {
+  introduccion: 0, 'por-que-synergia': 0, 'primeros-pasos': 0, 'configuracion-servidor': 0,
+  'configuracion-cliente': 0, 'caso-de-uso': 0,
+  arquitectura: 1, 'patrones-de-diseno': 1, 'flujo-de-tareas': 1, 'worker-aislamiento': 1,
+  'modelo-economico': 2, 'modelo-de-datos': 2, seguridad: 2,
+  'config-toml': 3, 'contrato-makefile': 3, cli: 3, 'api-rest': 3, 'api-websocket': 3, metricas: 3,
+  'tareas-ejemplo': 4,
+  glosario: 5, roadmap: 5,
+};
+
+const { entry, lang } = Astro.locals.starlightRoute;
+const isEn = (lang ?? 'es').startsWith('en');
+const locale = isEn ? 'en' : 'es';
+
+const pathname = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const pageUrl = `${ORIGIN}${pathname}`;
+const docsRoot = `${ORIGIN}${BASE}/${isEn ? 'en/' : ''}docs/`;
+const slug = pathname.replace(/\/$/, '').split('/').pop() ?? '';
+const isDocsHome = pageUrl === docsRoot;
+
+const title = entry.data.title;
+const description = entry.data.description ?? '';
+
+// ---------- BreadcrumbList ----------
+const crumbs: { name: string; item: string }[] = [
+  { name: isEn ? 'Documentation' : 'Documentación', item: docsRoot },
+];
+if (!isDocsHome) {
+  const sec = SLUG_SECTION[slug];
+  if (sec !== undefined) crumbs.push({ name: SECTIONS[locale][sec], item: docsRoot });
+  crumbs.push({ name: title, item: pageUrl });
+}
+const breadcrumb = {
+  '@type': 'BreadcrumbList',
+  '@id': `${pageUrl}#breadcrumb`,
+  itemListElement: crumbs.map((c, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: c.name,
+    item: c.item,
+  })),
+};
+
+// ---------- Entidades globales ----------
+const author = {
+  '@type': 'Person',
+  '@id': AUTHOR_ID,
+  name: AUTHOR_NAME,
+  url: AUTHOR_URL,
+};
+
+const website = {
+  '@type': 'WebSite',
+  '@id': WEBSITE_ID,
+  url: SITE_URL,
+  name: 'Synergia Docs',
+  description: isEn
+    ? 'Official technical documentation for Synergia, a voluntary distributed computing platform.'
+    : 'Documentación técnica oficial de Synergia, una plataforma de cómputo distribuido voluntario.',
+  inLanguage: ['es', 'en'],
+  publisher: { '@id': AUTHOR_ID },
+};
+
+const software = {
+  '@type': 'SoftwareApplication',
+  '@id': SOFTWARE_ID,
+  name: 'Synergia',
+  url: LANDING_URL,
+  description: isEn
+    ? 'Voluntary, centralized distributed computing platform: publishers submit GitHub-hosted tasks, volunteer workers run them in isolated Docker containers, and results are cross-verified and settled with internal credits.'
+    : 'Plataforma de cómputo distribuido voluntario y centralizada: los publicadores envían tareas alojadas en GitHub, los workers voluntarios las ejecutan en contenedores Docker aislados y los resultados se verifican por consenso y se liquidan con créditos internos.',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Linux',
+  softwareRequirements: 'Python >= 3.10, Docker, perf',
+  license: LICENSE_URL,
+  author: { '@id': AUTHOR_ID },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+  sameAs: [
+    'https://github.com/yagomilenio/synergia-server',
+    'https://github.com/yagomilenio/synergia-client',
+  ],
+};
+
+// ---------- TechArticle (página actual) ----------
+const article = {
+  '@type': 'TechArticle',
+  '@id': `${pageUrl}#article`,
+  headline: title,
+  description,
+  url: pageUrl,
+  mainEntityOfPage: pageUrl,
+  inLanguage: locale,
+  isPartOf: { '@id': WEBSITE_ID },
+  about: { '@id': SOFTWARE_ID },
+  breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+  author: { '@id': AUTHOR_ID },
+  publisher: { '@id': AUTHOR_ID },
+  license: LICENSE_URL,
+  image: `${ORIGIN}${BASE}/logo.jpg`,
+  proficiencyLevel: 'Expert',
+  genre: 'technical documentation',
+};
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': isDocsHome
+    ? [author, website, software, breadcrumb]
+    : [author, website, software, article, breadcrumb],
+};
+
+// Evita que un "</script>" dentro de un texto rompa la etiqueta
+const jsonLd = JSON.stringify(graph).replace(/</g, '\\u003c');
+---
+
+<Default><slot /></Default>
+<script is:inline type="application/ld+json" set:html={jsonLd} />
