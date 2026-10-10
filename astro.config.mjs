@@ -253,6 +253,7 @@ export default defineConfig({
               const siteTitleLink = document.querySelector('a.site-title');
               if (siteTitleLink) {
                 siteTitleLink.setAttribute('href', 'https://yagomilenio.github.io/synergia-landing');
+                siteTitleLink.setAttribute('aria-label', 'Synergia Home Page');
               }
             }
 
